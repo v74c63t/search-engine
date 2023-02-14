@@ -12,7 +12,11 @@ def build_index():
     # save to disk
     # merge after each read
     index = defaultdict(list)
-    documents = # get documents
+    documents = []
+    for root, dirs, files in os.walk("DEV/"):
+        for name in files:
+            if name.endswith((".json")):
+                documents.append(root+'/'+name)
     id = 0
     batch = 
     for d in documents:
