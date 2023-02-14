@@ -1,4 +1,6 @@
 from collections import defaultdict
+from bs4 import BeautifulSoup
+import nltk
 
 def build_index():   
     # I basically a dictionary
@@ -18,16 +20,21 @@ def build_index():
             if name.endswith((".json")):
                 documents.append(root+'/'+name)
     id = 0
-    batch = 
-    for d in documents:
+    batch_size = # some number
+    #for d in documents:
+    while documents.size() != 0:
+        batch = documents[0:batch_size]
+        documents = documents[batch_size:]
         for b in batch:
             id+=1
-            tokens = # parse (nltk)
-            for t in tokens:
-                t = #port stem(t) (look at nltk)
-                if index[t] == []: index[t] = Posting(id)
-                elif index[t][-1].getdoc_id() == id: index[t][-1].add_count()
-                else: index[t].append(Posting(id))
+            with open(b, 'r'):
+                text = # get text from file
+                tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
+                for t in tokens:
+                    stem = nltk.stem.PorterStemmer(t)#port stem(t) (look at nltk)
+                    if index[stem] == []: index[stem] = Posting(id)
+                    elif index[stem][-1].getdoc_id() == id: index[stem][-1].add_count()
+                    else: index[stem].append(Posting(id))
         # save to disk
         # merge
         # empty out index
