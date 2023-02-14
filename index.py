@@ -1,4 +1,5 @@
-   
+from collections import defaultdict
+
 def build_index():   
     # I basically a dictionary
     # N the id of the document
@@ -10,14 +11,32 @@ def build_index():
     # read in batches
     # save to disk
     # merge after each read
+    index = defaultdict(list)
+    documents = # get documents
+    id = 0
+    batch = 
+    for d in documents:
+        for b in batch:
+            id+=1
+            tokens = # parse (nltk)
+            for t in tokens:
+                t = #port stem(t) (look at nltk)
+                if index[t] == []: index[t] = Posting(id)
+                elif index[t][-1].getdoc_id() == id: index[t][-1].add_count()
+                else: index[t].append(Posting(id))
+        # save to disk
+        # merge
+        # empty out index
+
     return
 
 
 class Posting():
     # we need a posting class
     # posting will contain the document id and the frequency count of the word in that document?
-    def __init__(self):
+    def __init__(self, doc_id):
         self.doc_id
-        self.freq_count
+        self.freq_count = 1
     def add_count(self):
         self.freq_count+=1
+    def get_doc_id(self): return self.doc_id
