@@ -1,6 +1,7 @@
 from collections import defaultdict
 from bs4 import BeautifulSoup
 import nltk
+import os
 
 def build_index():   
     # I basically a dictionary
@@ -27,8 +28,8 @@ def build_index():
         documents = documents[batch_size:]
         for b in batch:
             id+=1
-            with open(b, 'r'):
-                text = # get text from file
+            with open(b, 'r') as f:
+                text = BeautifulSoup(f.read().decode('utf-8','ignore'), "lxml") # get text (not sure if this is correct)
                 tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                 for t in tokens:
                     stem = nltk.stem.PorterStemmer(t)#port stem(t) (look at nltk)
@@ -37,8 +38,7 @@ def build_index():
                     else: index[stem].append(Posting(id))
         # save to disk
         # merge
-        # empty out index
-
+        index.clear() # empty out index
     return
 
 
