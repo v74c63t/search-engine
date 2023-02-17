@@ -24,13 +24,14 @@ def build_index():
     for root, _, files in os.walk("DEV/"):
     #for root, _, files in os.walk("ANALYST/"):
         for name in files:
-            #if name.endswith((".json")): # im pretty sure everything is a json file tho?
-            documents.append(root+'/'+name)
+            if name.endswith((".json")): 
+                documents.append(root+'/'+name)
     id = 0
-    batch_size = 500# some number
+    batch_size = 1000# some number
     #print(len(documents))
     #for d in documents:
     while len(documents) != 0:
+        #print(len(documents))
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         for b in batch:
@@ -41,7 +42,7 @@ def build_index():
                     content = content['content']
                     #print(type(content))
                     #content = f.read()
-                    soup = BeautifulSoup(content, features='xml')#'html.parser') # get text (not sure if this is correct)
+                    soup = BeautifulSoup(content, features='lxml')#'html.parser') # get text (not sure if this is correct)
                     text = soup.get_text()
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     for t in tokens:
