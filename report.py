@@ -9,7 +9,7 @@ def report(num_of_docs):
     num_of_unique = len(index.keys())
     with open('report.txt', 'w') as f:
         f.write(f'Number of documents: {num_of_docs}\n')
-        f.write(f'Number of unique words: {num_of_unique}')
+        f.write(f'Number of unique words: {num_of_unique}\n')
         # figure out how to get size of index on disk
         bytes = sys.getsizeof(index)
         kb = bytes/1000
