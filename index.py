@@ -8,30 +8,19 @@ from json import JSONEncoder
 from report import report
 from pathlib import Path
 
-def build_index():   
-    # I basically a dictionary
-    # N the id of the document
-    # Parse the document
-    # For all the tokens t in T we see if the word is already in the dictionary if not we add it as a key 
-    # To the dictionary and give it an empty list of postings as a value
-    # If it already was in the dictionary, append the posting to the key
-    # look into port stemming (can import from nltk)
-    # read in batches
-    # save to disk
-    # merge after each read
+def build_index():
+    # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
     documents = []
+    # we get all the paths of the files inside the DEV folder
     for root, _, files in os.walk("DEV/"):
-    #for root, _, files in os.walk("ANALYST/"):
         for name in files:
             if name.endswith((".json")): 
                 documents.append(root+'/'+name)
     id = 0
-    batch_size = 1000# some number
-    #print(len(documents))
-    #for d in documents:
+    # we will read and parse the documents in batches of 1000 until there are no documents left
+    batch_size = 1000
     while len(documents) != 0:
-        #print(len(documents))
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         for b in batch:
@@ -40,42 +29,53 @@ def build_index():
                 content = json.load(f)
                 if 'content' in content:
                     content = content['content']
-                    #print(type(content))
-                    #content = f.read()
-                    soup = BeautifulSoup(content, features='lxml')#'html.parser') # get text (not sure if this is correct)
+                    # we get the text content of the file with BeautifulSoup
+                    soup = BeautifulSoup(content, features='lxml')# get text 
                     text = soup.get_text()
+                    # we parse the text with nltk
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     for t in tokens:
+                        # we port stem the word before it is added to the index
                         stemmer = nltk.PorterStemmer()
                         stem = stemmer.stem(t)#port stem(t) (look at nltk)
+                        # as long as the word is alphanumeric it is added to the index
                         if(stem.isalnum()):
-                            if index[stem] == []: index[stem].append(Posting(id))
-                            elif index[stem][-1].get_doc_id() == id: index[stem][-1].add_count()
-                            else: index[stem].append(Posting(id))
-        # CHECK IF THIS IS WORKS
+                            if index[stem] == []: 
+                                # if there is no value associated with the word, we append a posting for that document
+                                index[stem].append(Posting(id))
+                            elif index[stem][-1].get_doc_id() == id: 
+                                # if the previous posting for that word is for this document which we check by comparing
+                                # the document ids, we add to the frequency count
+                                index[stem][-1].add_count()
+                            else:
+                                # if there is a value associated with the word and the previous posting is not for this
+                                # document, we just append a new posting for the document at the end of the list 
+                                index[stem].append(Posting(id))
+        # we save to disk using json dump and json load
         file_path = Path('./index.json')
+        # if an index.json file does not already exist, there is no partial index we need to load and merge with the current
+        # index so we simply just create an index.json file to dump the index     
         if not Path.is_file(file_path):
             with open('index.json', 'w') as file:
                 json.dump(index, file, cls=PostingEncoder)
+        # if an index.json file does exist, we have to load the partial index from the file and merge it with the current index
+        # before overwriting the file and dumping it back into the file     
         else:
             with open('index.json') as file:
                 data = json.load(file)
+            # we merge the index by adding the values together if the keys are the same
             for k, v in data.items():
                 index[k] += v
             with open('index.json', 'w') as file:
                 json.dump(index, file, cls=PostingEncoder)
-        # save to disk json dump json loads???
-        # json load to get dictionary from file/disk?
-        # merge maybe using a for loop to add values from second dictionary to first?
-        # json dump to store to file/disk? make sure to overwrite the file
-        index.clear() # empty out index
+        # we empty out the index before continuing onto the next batch of documents
+        index.clear()
     report(id)
     return
 
 
 class Posting():
-    # we need a posting class
-    # posting will contain the document id and the frequency count of the word in that document?
+    # the posting class contain the document id and the frequency count of the word in that document
     def __init__(self, doc_id):
         self.doc_id = doc_id
         self.freq_count = 1
@@ -84,9 +84,7 @@ class Posting():
     def get_doc_id(self): 
         return self.doc_id
 
+# this class ensures that a Posting class object can be dumped into a json file
 class PostingEncoder(JSONEncoder):
     def default(self, o):
         return o.__dict__
-
-if __name__ == "__main__":
-    build_index()
