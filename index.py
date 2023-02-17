@@ -4,6 +4,7 @@ import nltk
 import os
 import json
 from report import report
+from pathlib import Path
 
 def build_index():   
     # I basically a dictionary
@@ -38,6 +39,18 @@ def build_index():
                     if index[stem] == []: index[stem] = Posting(id)
                     elif index[stem][-1].getdoc_id() == id: index[stem][-1].add_count()
                     else: index[stem].append(Posting(id))
+        # CHECK IF THIS IS WORKS
+        file_path = Path('./index.json')
+        if not Path.is_file(file_path):
+            with open('index.json', 'w') as file:
+                json.dump(index, file)
+        else:
+            with open('index.json') as file:
+                data = json.load(file)
+            for k, v in data:
+                index[k] += v
+            with open('index.json', 'w') as file:
+                json.dump(index, file)
         # save to disk json dump json loads???
         # json load to get dictionary from file/disk?
         # merge maybe using a for loop to add values from second dictionary to first?
