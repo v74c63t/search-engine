@@ -64,8 +64,9 @@ class Posting():
     # we need a posting class
     # posting will contain the document id and the frequency count of the word in that document?
     def __init__(self, doc_id):
-        self.doc_id
+        self.doc_id = doc_id
         self.freq_count = 1
     def add_count(self):
         self.freq_count+=1
-    def get_doc_id(self): return self.doc_id
+    def get_doc_id(self): 
+        return self.doc_id
