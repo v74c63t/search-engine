@@ -32,10 +32,17 @@ def build_index():
         for b in batch:
             id+=1
             with open(b, 'r') as f:
-                text = BeautifulSoup(f.read().decode('utf-8','ignore'), "lxml") # get text (not sure if this is correct)
-                tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
+                data = json.load(f)
+                if "content" in data:
+                    content = data["content"]
+
+                    soup = BeautifulSoup(content, "html.parser")#"lxml")
+                    text = soup.get_text()
+                    
+                    tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
+                    tokens = [word for word in tokens if word.isalnum()]
                 for t in tokens:
-                    stem = nltk.stem.PorterStemmer(t)#port stem(t) (look at nltk)
+                    stem = nltk.stem.PorterStemmer(t)#port stem(t) (look at nltk) # need to fix b/c some stems are wrong
                     if index[stem] == []: index[stem] = Posting(id)
                     elif index[stem][-1].getdoc_id() == id: index[stem][-1].add_count()
                     else: index[stem].append(Posting(id))
