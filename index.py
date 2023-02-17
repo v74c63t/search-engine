@@ -23,10 +23,11 @@ def build_index():
         for name in files:
             if name.endswith((".json")): # im pretty sure everything is a json file tho?
                 documents.append(root+'/'+name)
+
     id = 0
-    batch_size = # some number
-    #for d in documents:
-    while documents.size() != 0:
+    batch_size = 1 # some number
+
+    while len(documents) != 0:
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         for b in batch:
@@ -42,19 +43,27 @@ def build_index():
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     tokens = [word for word in tokens if word.isalnum()]
                 for t in tokens:
-                    stem = nltk.stem.PorterStemmer(t)#port stem(t) (look at nltk) # need to fix b/c some stems are wrong
-                    if index[stem] == []: index[stem] = Posting(id)
-                    elif index[stem][-1].getdoc_id() == id: index[stem][-1].add_count()
-                    else: index[stem].append(Posting(id))
+                    stemmer = nltk.stem.PorterStemmer()#port stem(t) (look at nltk) 
+                    stem = stemmer.stem(t) # need to fix b/c some stems are wrong
+
+                    #if index[stem] == []: index[stem] = [Posting(id)]
+                    #elif index[stem][-1].get_doc_id() == id: index[stem][-1].add_count()
+                    #else: index[stem].append(Posting(id))
+
+                    if index[stem] == []: index[stem] = [[id,1]]
+                    elif index[stem][-1][0] == id: index[stem][-1][1] += 1
+                    else: index[stem].append([id,1])
         # CHECK IF THIS IS WORKS
         file_path = Path('./index.json')
         if not Path.is_file(file_path):
             with open('index.json', 'w') as file:
-                json.dump(index, file)
+                json.dump(index, file)  # TypeError: Object of type Posting is not JSON serializable
+                                        # fix by storing Posting as a list instead of making a class?
+                                        # can maybe make Posting JSON serializable
         else:
             with open('index.json') as file:
                 data = json.load(file)
-            for k, v in data:
+            for k, v in data:           # ValueError: too many values to unpack
                 index[k] += v
             with open('index.json', 'w') as file:
                 json.dump(index, file)
@@ -77,3 +86,7 @@ class Posting():
         self.freq_count+=1
     def get_doc_id(self): 
         return self.doc_id
+
+
+if __name__ == "__main__":
+    build_index()
