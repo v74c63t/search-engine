@@ -3,6 +3,8 @@ from bs4 import BeautifulSoup
 import nltk
 import os
 import json
+import lxml
+from json import JSONEncoder
 from report import report
 from pathlib import Path
 
@@ -20,37 +22,47 @@ def build_index():
     index = defaultdict(list)
     documents = []
     for root, _, files in os.walk("DEV/"):
+    #for root, _, files in os.walk("ANALYST/"):
         for name in files:
-            if name.endswith((".json")): # im pretty sure everything is a json file tho?
-                documents.append(root+'/'+name)
+            #if name.endswith((".json")): # im pretty sure everything is a json file tho?
+            documents.append(root+'/'+name)
     id = 0
-    batch_size = # some number
+    batch_size = 500# some number
+    #print(len(documents))
     #for d in documents:
-    while documents.size() != 0:
+    while len(documents) != 0:
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         for b in batch:
             id+=1
-            with open(b, 'r') as f:
-                text = BeautifulSoup(f.read().decode('utf-8','ignore'), "lxml") # get text (not sure if this is correct)
-                tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
-                for t in tokens:
-                    stem = nltk.stem.PorterStemmer(t)#port stem(t) (look at nltk)
-                    if index[stem] == []: index[stem] = Posting(id)
-                    elif index[stem][-1].getdoc_id() == id: index[stem][-1].add_count()
-                    else: index[stem].append(Posting(id))
+            with open(b, 'r', encoding='utf-8', errors='ignore') as f:
+                content = json.load(f)
+                if 'content' in content:
+                    content = content['content']
+                    #print(type(content))
+                    #content = f.read()
+                    soup = BeautifulSoup(content, features='xml')#'html.parser') # get text (not sure if this is correct)
+                    text = soup.get_text()
+                    tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
+                    for t in tokens:
+                        stemmer = nltk.PorterStemmer()
+                        stem = stemmer.stem(t)#port stem(t) (look at nltk)
+                        if(stem.isalnum()):
+                            if index[stem] == []: index[stem].append(Posting(id))
+                            elif index[stem][-1].get_doc_id() == id: index[stem][-1].add_count()
+                            else: index[stem].append(Posting(id))
         # CHECK IF THIS IS WORKS
         file_path = Path('./index.json')
         if not Path.is_file(file_path):
             with open('index.json', 'w') as file:
-                json.dump(index, file)
+                json.dump(index, file, cls=PostingEncoder)
         else:
             with open('index.json') as file:
                 data = json.load(file)
-            for k, v in data:
+            for k, v in data.items():
                 index[k] += v
             with open('index.json', 'w') as file:
-                json.dump(index, file)
+                json.dump(index, file, cls=PostingEncoder)
         # save to disk json dump json loads???
         # json load to get dictionary from file/disk?
         # merge maybe using a for loop to add values from second dictionary to first?
@@ -70,3 +82,10 @@ class Posting():
         self.freq_count+=1
     def get_doc_id(self): 
         return self.doc_id
+
+class PostingEncoder(JSONEncoder):
+    def default(self, o):
+        return o.__dict__
+
+if __name__ == "__main__":
+    build_index()
