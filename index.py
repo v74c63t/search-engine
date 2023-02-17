@@ -2,6 +2,8 @@ from collections import defaultdict
 from bs4 import BeautifulSoup
 import nltk
 import os
+import json
+from report import report
 
 def build_index():   
     # I basically a dictionary
@@ -16,9 +18,9 @@ def build_index():
     # merge after each read
     index = defaultdict(list)
     documents = []
-    for root, dirs, files in os.walk("DEV/"):
+    for root, _, files in os.walk("DEV/"):
         for name in files:
-            if name.endswith((".json")):
+            if name.endswith((".json")): # im pretty sure everything is a json file tho?
                 documents.append(root+'/'+name)
     id = 0
     batch_size = # some number
@@ -36,9 +38,12 @@ def build_index():
                     if index[stem] == []: index[stem] = Posting(id)
                     elif index[stem][-1].getdoc_id() == id: index[stem][-1].add_count()
                     else: index[stem].append(Posting(id))
-        # save to disk
-        # merge
+        # save to disk json dump json loads???
+        # json load to get dictionary from file/disk?
+        # merge maybe using a for loop to add values from second dictionary to first?
+        # json dump to store to file/disk? make sure to overwrite the file
         index.clear() # empty out index
+    report(id)
     return
 
 
