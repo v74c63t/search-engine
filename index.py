@@ -8,12 +8,13 @@ from json import JSONEncoder
 from report import report
 from pathlib import Path
 
-def build_index():
+def build_index(path):
     # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
     documents = []
     # we get all the paths of the files inside the DEV folder
-    for root, _, files in os.walk("DEV/"):
+    #for root, _, files in os.walk("DEV/"):
+    for root, _, files in os.walk(Path(path)):
         for name in files:
             if name.endswith((".json")): 
                 documents.append(root+'/'+name)
