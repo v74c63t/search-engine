@@ -82,13 +82,15 @@ def get_doc_paths(path):
 def tfidf(N): # not sure if correct
     with open('index.json') as file:
         index = json.load(file)
-    for _, v in index.items():
+    for k, v in index.items():
         v_len = len(v)
         for p in v:
-            tf = 1 + math.log(p.freq_count, 10)
+            tf = 1 + math.log(p['freq_count'], 10)
             idf = math.log((N/v_len))
             w = tf * idf
-            p.freq_count = w # put here temporarily will prob rename/create new attribute and rebuild index later
+            p['freq_count'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
+        # sort by tfidf
+        index[k] = sorted(v, key=lambda x: x['freq_count'], reverse=True)
     with open('index.json', 'w') as file:
         json.dump(index, file, cls=PostingEncoder)
     index.clear()
