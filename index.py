@@ -9,11 +9,11 @@ from report import report
 from pathlib import Path
 import math
 
-def build_index(path):
+def build_index(documents):
     # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
     # we get all the paths of the files inside the DEV folder
-    documents = get_doc_paths(path)
+    # documents = get_doc_paths(path)
     id = 0
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
@@ -91,6 +91,7 @@ def tfidf(N): # not sure if correct
             p.freq_count = w # put here temporarily will prob rename/create new attribute and rebuild index later
     with open('index.json', 'w') as file:
         json.dump(index, file, cls=PostingEncoder)
+    index.clear()
 
 def get_doc_url(documents, id):
     i = id - 1 # because id starts at 1
