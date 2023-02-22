@@ -7,17 +7,13 @@ import lxml
 from json import JSONEncoder
 from report import report
 from pathlib import Path
+import math
 
 def build_index(path):
     # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
-    documents = []
     # we get all the paths of the files inside the DEV folder
-    #for root, _, files in os.walk("DEV/"):
-    for root, _, files in os.walk(Path(path)):
-        for name in files:
-            if name.endswith((".json")): 
-                documents.append(root+'/'+name)
+    documents = get_doc_paths(path)
     id = 0
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
@@ -73,6 +69,28 @@ def build_index(path):
         index.clear()
     report(id)
     return
+
+def get_doc_paths(path):
+    documents = []
+     #for root, _, files in os.walk("DEV/"):
+    for root, _, files in os.walk(Path(path)):
+        for name in files:
+            if name.endswith((".json")): 
+                documents.append(root+'/'+name)
+    return documents
+
+def tfidf(N): # not sure if correct
+    with open('index.json') as file:
+        index = json.load(file)
+    for _, v in index.items():
+        v_len = len(v)
+        for p in v:
+            tf = 1 + math.log(p.freq_count, 10)
+            idf = math.log((N/v_len))
+            w = tf * idf
+            p.freq_count = w # put here temporarily will prob rename/create new attribute and rebuild index later
+    with open('index.json', 'w') as file:
+        json.dump(index, file, cls=PostingEncoder)
 
 
 class Posting():
