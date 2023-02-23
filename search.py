@@ -5,7 +5,7 @@ import json
 import math
 from queue import PriorityQueue
 
-def search():
+def search(k):
     file_path = Path('./index.json')
     documents = index.get_doc_paths()   
     if not Path.is_file(file_path):
@@ -16,16 +16,33 @@ def search():
     query = input()
     #queries = []
     stemmer = nltk.PorterStemmer
-    postings = []
+    postings = PriorityQueue()
     for q in query.split():
         #queries.append(stemmer.stem(q))
-        postings.append(index[stemmer.stem(q)])
+        # assuming the stem exists will deal with it not existing later
+        postings.put(len(index[stemmer.stem(q)]), index[stemmer.stem(q)])
+    tfidf = True
+    while(postings.qsize() > 1):
+        l1 = postings.get()
+        l2 = postings.get()
+        intersection = intersection(l1, l2, tfidf)
+        postings.put(len(intersection), intersection)
+        tfidf = False
+    # assuming there are interesections will deal with there not having any later
     ids = PriorityQueue()
+    final = postings.get()
+    for id, y in final:
+        ids.put(-y, id)
+    # get top k results
+    results = []
+    for _ in range(k):
+        id = ids.get()
+        results.append(get_doc_url(id))
+        if ids.empty():
+            break
+    for url in results:
+        print(url)
 
-    
-    
-
-    # figure out what to do with index
 
 def tfidf(N, p, v_len): # not sure if correct
     tf = 1 + math.log(p['y'], 10)
@@ -34,7 +51,7 @@ def tfidf(N, p, v_len): # not sure if correct
     # p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
     return w
 
-def intersection(l1, l2, N):
+def intersection(l1, l2, N, tfidf=False):
     intersection = []
     len1 = len(l1)
     len2 = len(l2)
@@ -49,9 +66,24 @@ def intersection(l1, l2, N):
             elif p2['id'] < p1['id']:
                 p2 = next(l2)
             elif p1['id'] == p2['id']:
-                tfidf = tfidf(N, p1, len1) + tfidf(N, p2, len2)
-                intersection.append((p1['id'], tfidf))
+                val = dict()
+                if tfidf:
+                    score = tfidf(N, p1, len1) + tfidf(N, p2, len2)
+                else:
+                    score = p1['y'] + tfidf(N, p2, len2)
+                val['id'] = p1['id']
+                val['y'] = score
+                intersection.append(val)
         except StopIteration:
             break
     return intersection
+
+def get_doc_url(documents, id):
+    i = id - 1 # because id starts at 1
+    doc = documents[i]
+    with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
+        content = json.load(f)
+        if 'url' in content:
+            return content['url']
+    return ''
 
