@@ -62,8 +62,8 @@ def intersection(l1, l2, N, tfidf=False):
     intersection = []
     len1 = len(l1)
     len2 = len(l2)
-    l1 = iter(sorted(sorted(l1, key=lambda x: x['id'])))
-    l2 = iter(sorted(sorted(l2, key=lambda x: x['id'])))
+    l1 = iter(sorted(l1, key=lambda x: x['id'])) # might sort after index is built instead of during query handling
+    l2 = iter(sorted(l2, key=lambda x: x['id']))
     p1 = next(l1)
     p2 = next(l2)
     while(True):
