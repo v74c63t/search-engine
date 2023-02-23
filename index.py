@@ -96,15 +96,6 @@ def get_doc_paths(path):
 #         json.dump(index, file, cls=PostingEncoder)
 #     index.clear()
 
-def get_doc_url(documents, id):
-    i = id - 1 # because id starts at 1
-    doc = documents[i]
-    with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
-        content = json.load(f)
-        if 'url' in content:
-            return content['url']
-    return ''
-
 class Posting():
     # the posting class contain the document id and the frequency count of the word in that document
     def __init__(self, doc_id):
