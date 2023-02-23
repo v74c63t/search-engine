@@ -5,9 +5,10 @@ import json
 import math
 from queue import PriorityQueue
 
-def search(k):
+def search(path, k):
     file_path = Path('./index.json')
-    documents = index.get_doc_paths()   
+    documents = index.get_doc_paths(path)  
+    N = len(documents) 
     if not Path.is_file(file_path):
         index.build_index(documents)
         #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
@@ -25,13 +26,13 @@ def search(k):
     if postings.qsize == 1:
         p = postings.get()
         for i in p:
-            w = tfidf(i)
+            w = tfidf(N, i, len(p))
             i['y'] = w
         postings.put(len(p), p)
     while(postings.qsize() > 1):
         l1 = postings.get()
         l2 = postings.get()
-        intersection = intersection(l1, l2, tfidf)
+        intersection = intersection(l1, l2, N, tfidf)
         postings.put(len(intersection), intersection)
         tfidf = False
     # assuming there are interesections will deal with there not having any later
