@@ -19,20 +19,23 @@ def split(words):
     if len(words) > 2:
         mid = len(words) // 2
         merge(split(words[:mid]), split(words[mid:]))
+    elif len(words) == 1:
+        return list(posting.get_doc_id() for posting in data[words[0]])
     else:
-        return merge(words[0], words[1])
+        ids1 = list(posting.get_doc_id() for posting in data[words[0]])
+        ids2 = list(posting.get_doc_id() for posting in data[words[1]])
+        return merge(ids1, ids2)
 
 
-def merge(word1, word2):
-    postings1 = data[word1]
-    postings2 = data[word2]
+def merge(ids1, ids2):
+    # returns common doc ids
     merged = []
     i1 = 0
     i2 = 0
 
-    while i1 < len(postings1) and i2 < len(postings2):
-        id1 = postings1[i1].get_id()
-        id2 = postings2[i2].get_id()
+    while i1 < len(ids1) and i2 < len(ids2):
+        id1 = ids1[i1]
+        id2 = ids2[i2]
         if id1 == id2:
             merged.append(id1)
             i1 += 1
