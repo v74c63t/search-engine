@@ -27,10 +27,11 @@ def build_index(documents):
                 if 'content' in content:
                     content = content['content']
                     # we get the text content of the file with BeautifulSoup
-                    soup = BeautifulSoup(content, features='lxml')# get text 
+                    soup = BeautifulSoup(content, features='xml')# get text 
                     text = soup.get_text()
                     # we parse the text with nltk
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
+                    position = 1
                     for t in tokens:
                         # we port stem the word before it is added to the index
                         stemmer = nltk.PorterStemmer()
@@ -39,15 +40,17 @@ def build_index(documents):
                         if(stem.isalnum()):
                             if index[stem] == []: 
                                 # if there is no value associated with the word, we append a posting for that document
-                                index[stem].append(Posting(id))
+                                index[stem].append(Posting(id, position))
                             elif index[stem][-1].get_doc_id() == id: 
                                 # if the previous posting for that word is for this document which we check by comparing
                                 # the document ids, we add to the frequency count
                                 index[stem][-1].add_count()
+                                index[stem][-1].add_position(position)
                             else:
                                 # if there is a value associated with the word and the previous posting is not for this
                                 # document, we just append a new posting for the document at the end of the list 
-                                index[stem].append(Posting(id))
+                                index[stem].append(Posting(id, position))
+                        position += 1
         # we save to disk using json dump and json load
         file_path = Path('./index.json')
         # if an index.json file does not already exist, there is no partial index we need to load and merge with the current
@@ -106,13 +109,20 @@ def get_doc_url(documents, id):
 
 class Posting():
     # the posting class contain the document id and the frequency count of the word in that document
-    def __init__(self, doc_id):
-        self.doc_id = doc_id
+    def __init__(self, doc_id, position):
         self.freq_count = 1
+        self.doc_id = doc_id
+        self.positions = [position]    # todo: put positions as second index
+
     def add_count(self):
         self.freq_count+=1
     def get_doc_id(self): 
         return self.doc_id
+    def add_position(self, position):
+        self.positions.append(position)
+    def get_positions(self):
+        return self.positions
+
 
 # this class ensures that a Posting class object can be dumped into a json file
 class PostingEncoder(JSONEncoder):
