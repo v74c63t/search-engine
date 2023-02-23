@@ -10,7 +10,7 @@ def search(k):
     documents = index.get_doc_paths()   
     if not Path.is_file(file_path):
         index.build_index(documents)
-        index.tfidf(len(documents))
+        #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
     with open('index.json') as file:
         index = json.load(file)
     query = input()
@@ -22,6 +22,12 @@ def search(k):
         # assuming the stem exists will deal with it not existing later
         postings.put(len(index[stemmer.stem(q)]), index[stemmer.stem(q)])
     tfidf = True
+    if postings.qsize == 1:
+        p = postings.get()
+        for i in p:
+            w = tfidf(i)
+            i['y'] = w
+        postings.put(len(p), p)
     while(postings.qsize() > 1):
         l1 = postings.get()
         l2 = postings.get()
@@ -46,7 +52,7 @@ def search(k):
 
 def tfidf(N, p, v_len): # not sure if correct
     tf = 1 + math.log(p['y'], 10)
-    idf = math.log((N/v_len))
+    idf = math.log((N/v_len), 10)
     w = tf * idf
     # p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
     return w
@@ -71,6 +77,7 @@ def intersection(l1, l2, N, tfidf=False):
                     score = tfidf(N, p1, len1) + tfidf(N, p2, len2)
                 else:
                     score = p1['y'] + tfidf(N, p2, len2)
+                # score = p1['y'] + p2['y'] if tfidf is calculated beforehand
                 val['id'] = p1['id']
                 val['y'] = score
                 intersection.append(val)
