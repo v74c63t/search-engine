@@ -18,6 +18,7 @@ def build_index(documents):
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
     while len(documents) != 0:
+        #print(len(documents))
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         for b in batch:
@@ -27,8 +28,8 @@ def build_index(documents):
                 if 'content' in content:
                     content = content['content']
                     # we get the text content of the file with BeautifulSoup
-                    soup = BeautifulSoup(content, features='lxml')# get text 
-                    text = soup.get_text()
+                    soup = BeautifulSoup(content, 'html.parser')# get text 
+                    text = soup.get_text(' ')
                     # we parse the text with nltk
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     for t in tokens:
@@ -67,7 +68,7 @@ def build_index(documents):
                 json.dump(index, file, cls=PostingEncoder)
         # we empty out the index before continuing onto the next batch of documents
         index.clear()
-    report(id)
+    #report(id)
     return
 
 def get_doc_paths(path):
@@ -85,12 +86,12 @@ def tfidf(N): # not sure if correct
     for k, v in index.items():
         v_len = len(v)
         for p in v:
-            tf = 1 + math.log(p['freq_count'], 10)
+            tf = 1 + math.log(p['y'], 10)
             idf = math.log((N/v_len))
             w = tf * idf
-            p['freq_count'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
+            p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
         # sort by tfidf
-        index[k] = sorted(v, key=lambda x: x['freq_count'], reverse=True)
+        index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
     with open('index.json', 'w') as file:
         json.dump(index, file, cls=PostingEncoder)
     index.clear()
@@ -107,14 +108,18 @@ def get_doc_url(documents, id):
 class Posting():
     # the posting class contain the document id and the frequency count of the word in that document
     def __init__(self, doc_id):
-        self.doc_id = doc_id
-        self.freq_count = 1
+        self.id = doc_id
+        self.y = 1 # term freq / will turn into tfidf later
     def add_count(self):
-        self.freq_count+=1
+        self.y+=1
     def get_doc_id(self): 
-        return self.doc_id
+        return self.id
 
 # this class ensures that a Posting class object can be dumped into a json file
 class PostingEncoder(JSONEncoder):
     def default(self, o):
         return o.__dict__
+
+
+if __name__ == "__main__":
+    build_index(get_doc_paths('./DEV'))
