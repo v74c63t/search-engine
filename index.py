@@ -80,21 +80,21 @@ def get_doc_paths(path):
                 documents.append(root+'/'+name)
     return documents
 
-def tfidf(N): # not sure if correct
-    with open('index.json') as file:
-        index = json.load(file)
-    for k, v in index.items():
-        v_len = len(v)
-        for p in v:
-            tf = 1 + math.log(p['y'], 10)
-            idf = math.log((N/v_len))
-            w = tf * idf
-            p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
-        # sort by tfidf
-        index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
-    with open('index.json', 'w') as file:
-        json.dump(index, file, cls=PostingEncoder)
-    index.clear()
+# def tfidf(N): # not sure if correct
+#     with open('index.json') as file:
+#         index = json.load(file)
+#     for k, v in index.items():
+#         v_len = len(v)
+#         for p in v:
+#             tf = 1 + math.log(p['y'], 10)
+#             idf = math.log((N/v_len))
+#             w = tf * idf
+#             p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
+#         # sort by tfidf
+#         index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
+#     with open('index.json', 'w') as file:
+#         json.dump(index, file, cls=PostingEncoder)
+#     index.clear()
 
 def get_doc_url(documents, id):
     i = id - 1 # because id starts at 1
