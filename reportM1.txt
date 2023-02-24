@@ -1,4 +1,0 @@
-Names: Vanessa Tang, Genevieve Del Rosario, Liam Breton
-Number of documents: 55393
-Number of unique words: 737637
-Total size of index on disk: 381129.773 KB
