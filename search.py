@@ -39,65 +39,77 @@ def search(documents, index, N, k):
     #queries = []
     stemmer = nltk.PorterStemmer()
     postings = PriorityQueue()
-    for q in query:
-        # print(q)
-        #queries.append(stemmer.stem(q))
-        # assuming the stem exists will deal with it not existing later
-        postings.put((len(index[stemmer.stem(q)]), index[stemmer.stem(q)]))
-        #print(len(index[stemmer.stem(q)]))
-    # tfidf = True
-    # if postings.qsize == 1:
-    #     p = postings.get()
-    #     for i in p:
-    #         w = tfidf(N, i, len(p))
-    #         i['y'] = w
-    #     postings.put(len(p), p)
-    while(postings.qsize() > 1):
-        l1 = postings.get()[1]
-        # print(l1)
-        l2 = postings.get()[1]
-        # intersection = intersection(l1, l2, N, tfidf)
-        intersection = compute_intersection(l1, l2)
-        postings.put((len(intersection), intersection))
-        # tfidf = False
-    # assuming there are interesections will deal with there not having any later
-    ids = PriorityQueue()
-    final = postings.get()[1]
-    #print(final)
-    for d in final:
-        ids.put((-d['y'], d['id']))
-    # get top k results
-    total_results = ids.qsize()
-    results = []
-    for _ in range(k):
-        id = ids.get()[1]
-        while(True):
-            url = get_doc_url(documents, id)
-            if urldefrag(url)[1] != "":
-                url = urldefrag(url)[0]
-                if url in results:
-                    if ids.empty():
+    try:
+        for q in query:
+            # print(q)
+            #queries.append(stemmer.stem(q))
+            # assuming the stem exists will deal with it not existing later
+            postings.put((len(index[stemmer.stem(q)]), index[stemmer.stem(q)]))
+            #print(len(index[stemmer.stem(q)]))
+        # tfidf = True
+        # if postings.qsize == 1:
+        #     p = postings.get()
+        #     for i in p:
+        #         w = tfidf(N, i, len(p))
+        #         i['y'] = w
+        #     postings.put(len(p), p)
+        while(postings.qsize() > 1):
+            l1 = postings.get()[1]
+            # print(l1)
+            l2 = postings.get()[1]
+            # intersection = intersection(l1, l2, N, tfidf)
+            intersection = compute_intersection(l1, l2)
+            postings.put((len(intersection), intersection))
+            # tfidf = False
+        # assuming there are interesections will deal with there not having any later
+        ids = PriorityQueue()
+        final = postings.get()
+        size = final[0]
+        if size == 0:
+            print()
+            print(f'Found 0 results for {queries}.')
+            print()
+            return
+        final = final[1]
+        #print(final)
+        for d in final:
+            ids.put((-d['y'], d['id']))
+        # get top k results
+        total_results = ids.qsize()
+        results = []
+        for _ in range(k):
+            id = ids.get()[1]
+            while(True):
+                url = get_doc_url(documents, id)
+                if urldefrag(url)[1] != "":
+                    url = urldefrag(url)[0]
+                    if url in results:
+                        if ids.empty():
+                            break
+                        id = ids.get()[1]
+                    else:
+                        results.append(url)
                         break
-                    id = ids.get()[1]
                 else:
-                    results.append(url)
-                    break
-            else:
-                if url in results:
-                    if ids.empty():
+                    if url in results:
+                        if ids.empty():
+                            break
+                        id = ids.get()[1]
+                    else:
+                        results.append(url)
                         break
-                    id = ids.get()[1]
-                else:
-                    results.append(url)
-                    break
-        # results.append(get_doc_url(documents, id))
-        if ids.empty():
-            break
-    print()
-    print(f'Found {total_results} results for {queries}. Returning top {len(results)} results...')
-    for url in results:
-        print(url)
-    print()
+            # results.append(get_doc_url(documents, id))
+            if ids.empty():
+                break
+        print()
+        print(f'Found {total_results} results for {queries}. Returning top {len(results)} results...')
+        for url in results:
+            print(url)
+        print()
+    except(KeyError):
+        print()
+        print(f'Found 0 results for {queries}.')
+        print()
 
 
 # def tfidf(N, p, v_len): # not sure if correct
