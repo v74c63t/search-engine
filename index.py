@@ -62,10 +62,10 @@ def build_index(documents):
             with open('index.json') as file:
                 data = json.load(file)
             # we merge the index by adding the values together if the keys are the same
-            for k, v in data.items():
-                index[k] += v
+            for k, v in index.items():
+                data[k] += v
             with open('index.json', 'w') as file:
-                json.dump(index, file, cls=PostingEncoder)
+                json.dump(data, file, cls=PostingEncoder)
         # we empty out the index before continuing onto the next batch of documents
         index.clear()
     #report(id)
