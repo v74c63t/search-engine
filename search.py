@@ -94,9 +94,10 @@ def search(documents, index, N, k):
         if ids.empty():
             break
     print()
-    print(f'Found {total_results} results for {queries}. Returning top {len(results)} results.')
+    print(f'Found {total_results} results for {queries}. Returning top {len(results)} results...')
     for url in results:
         print(url)
+    print()
 
 
 # def tfidf(N, p, v_len): # not sure if correct
