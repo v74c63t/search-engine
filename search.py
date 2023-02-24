@@ -20,11 +20,11 @@ def search(path, k):
         index.sort_and_tfidf(N)
     with open('index.json') as file:
         index = json.load(file)
-    query = input()
+    query = inputQuery()
     #queries = []
     stemmer = nltk.PorterStemmer
     postings = PriorityQueue()
-    for q in query.split():
+    for q in query:
         #queries.append(stemmer.stem(q))
         # assuming the stem exists will deal with it not existing later
         postings.put(len(index[stemmer.stem(q)]), index[stemmer.stem(q)])
