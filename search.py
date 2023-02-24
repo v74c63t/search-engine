@@ -5,6 +5,10 @@ import json
 import math
 from queue import PriorityQueue
 
+def inputQuery():
+    queries = input("Please enter your search terms \n >> ")
+    return nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
+
 def search(path, k):
     file_path = Path('./index.json')
     documents = index.get_doc_paths(path)  
@@ -106,3 +110,10 @@ def get_doc_url(documents, id):
             return content['url']
     return ''
 
+def main():
+    print(inputQuery())
+    input("Press Enter to continue")
+
+
+if __name__ == "__main__":
+    main()
