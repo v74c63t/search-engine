@@ -72,6 +72,9 @@ def build_index(documents):
     return
 
 def get_doc_paths(path):
+    '''
+    get all the documents paths in a folder so it can be accessed later
+    '''
     documents = []
      #for root, _, files in os.walk("DEV/"):
     for root, _, files in os.walk(Path(path)):
@@ -80,21 +83,31 @@ def get_doc_paths(path):
                 documents.append(root+'/'+name)
     return documents
 
-# def tfidf(N): # not sure if correct
-#     with open('index.json') as file:
-#         index = json.load(file)
-#     for k, v in index.items():
-#         v_len = len(v)
-#         for p in v:
-#             tf = 1 + math.log(p['y'], 10)
-#             idf = math.log((N/v_len))
-#             w = tf * idf
-#             p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
-#         # sort by tfidf
-#         index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
-#     with open('index.json', 'w') as file:
-#         json.dump(index, file, cls=PostingEncoder)
-#     index.clear()
+def sort_and_tfidf(N): # not sure if correct
+    '''
+    sorts the keys alphabetically
+    sorts the values by doc_id
+    calculates the tfidf for each term-doc pair
+    writes each term-list of postings pair to a newline
+    '''
+    with open('index.json') as file:
+        index = json.load(file)
+    for k, v in index.items():
+        v_len = len(v)
+        for p in v:
+            tf = 1 + math.log(p['y'], 10)
+            idf = math.log((N/v_len), 10)
+            w = tf * idf
+            p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
+        # # sort by tfidf
+        # index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
+        index[k] = sorted(v, key=lambda x: x['id']) # sort by doc_id
+    with open('index.json', 'w') as file:
+        alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n') # sort alphabetically/puts each key-val pair on new line
+        index.clear()
+        #json.dump(index, file, cls=PostingEncoder)
+        file.write(alphabetical)
+
 
 class Posting():
     # the posting class contain the document id and the frequency count of the word in that document
@@ -112,5 +125,5 @@ class PostingEncoder(JSONEncoder):
         return o.__dict__
 
 
-if __name__ == "__main__":
-    build_index(get_doc_paths('./DEV'))
+# if __name__ == "__main__":
+#     build_index(get_doc_paths('./DEV'))
