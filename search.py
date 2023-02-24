@@ -6,9 +6,11 @@ import json
 import math
 from queue import PriorityQueue
 
-def inputQuery():
+def input_query():
     queries = input("Please enter your search terms \n >> ")
-    return nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
+    words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
+    # remove words if not alnum
+    return set(word for word in words if word.isalnum()) # decide what do with queries that contain duplicate words later
 
 def search(path, k):
     file_path = Path('./index.json')
@@ -20,7 +22,7 @@ def search(path, k):
         index.sort_and_tfidf(N)
     with open('index.json') as file:
         index = json.load(file)
-    query = inputQuery()
+    query = input_query()
     #queries = []
     stemmer = nltk.PorterStemmer
     postings = PriorityQueue()
@@ -112,8 +114,14 @@ def get_doc_url(documents, id):
     return ''
 
 def main():
-    print(inputQuery())
-    input("Press Enter to continue")
+    user_input = ''
+    while(True):
+        user_input = input("Press the enter key to continue or input quit to exit: ")
+        if user_input == 'quit': break
+        print()
+        print(input_query())
+        # user_input = input("Press Enter to continue or input quit() to exit")
+        print(user_input)
 
 
 if __name__ == "__main__":
