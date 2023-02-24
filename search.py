@@ -5,6 +5,12 @@ import json
 import math
 from queue import PriorityQueue
 
+
+
+def inputQuery():
+    queries = input("Please enter your search terms \n >> ")
+    return nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
+
 def search(path, k):
     file_path = Path('./index.json')
     documents = index.get_doc_paths(path)  
@@ -12,7 +18,6 @@ def search(path, k):
     if not Path.is_file(file_path):
         index.build_index(documents)
         #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
-        index.sort_and_tfidf(N)
     with open('index.json') as file:
         index = json.load(file)
     query = input()
@@ -23,20 +28,19 @@ def search(path, k):
         #queries.append(stemmer.stem(q))
         # assuming the stem exists will deal with it not existing later
         postings.put(len(index[stemmer.stem(q)]), index[stemmer.stem(q)])
-    # tfidf = True
-    # if postings.qsize == 1:
-    #     p = postings.get()
-    #     for i in p:
-    #         w = tfidf(N, i, len(p))
-    #         i['y'] = w
-    #     postings.put(len(p), p)
+    tfidf = True
+    if postings.qsize == 1:
+        p = postings.get()
+        for i in p:
+            w = tfidf(N, i, len(p))
+            i['y'] = w
+        postings.put(len(p), p)
     while(postings.qsize() > 1):
         l1 = postings.get()
         l2 = postings.get()
-        # intersection = intersection(l1, l2, N, tfidf)
-        intersection = intersection(l1, l2)
+        intersection = intersection(l1, l2, N, tfidf)
         postings.put(len(intersection), intersection)
-        # tfidf = False
+        tfidf = False
     # assuming there are interesections will deal with there not having any later
     ids = PriorityQueue()
     final = postings.get()
@@ -53,25 +57,19 @@ def search(path, k):
         print(url)
 
 
-# def tfidf(N, p, v_len): # not sure if correct
-#     tf = 1 + math.log(p['y'], 10)
-#     idf = math.log((N/v_len), 10)
-#     w = tf * idf
-#     # p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
-#     return w
+def tfidf(N, p, v_len): # not sure if correct
+    tf = 1 + math.log(p['y'], 10)
+    idf = math.log((N/v_len), 10)
+    w = tf * idf
+    # p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
+    return w
 
-# def intersection(l1, l2, N, tfidf=False):
-def intersection(l1, l2):
-    '''
-    finds the intersection between the two lists of postings
-    essentially finds documents that belong on both lists and returns postings 
-    of those with updated tfidf score
-    '''
+def intersection(l1, l2, N, tfidf=False):
     intersection = []
-    # len1 = len(l1)
-    # len2 = len(l2)
-    # l1 = iter(sorted(l1, key=lambda x: x['id'])) # might sort after index is built instead of during query handling
-    # l2 = iter(sorted(l2, key=lambda x: x['id']))
+    len1 = len(l1)
+    len2 = len(l2)
+    l1 = iter(sorted(l1, key=lambda x: x['id'])) # might sort after index is built instead of during query handling
+    l2 = iter(sorted(l2, key=lambda x: x['id']))
     p1 = next(l1)
     p2 = next(l2)
     while(True):
@@ -82,11 +80,11 @@ def intersection(l1, l2):
                 p2 = next(l2)
             elif p1['id'] == p2['id']:
                 val = dict()
-                # if tfidf:
-                #     score = tfidf(N, p1, len1) + tfidf(N, p2, len2)
-                # else:
-                #     score = p1['y'] + tfidf(N, p2, len2)
-                score = p1['y'] + p2['y'] #if tfidf is calculated beforehand
+                if tfidf:
+                    score = tfidf(N, p1, len1) + tfidf(N, p2, len2)
+                else:
+                    score = p1['y'] + tfidf(N, p2, len2)
+                # score = p1['y'] + p2['y'] if tfidf is calculated beforehand
                 val['id'] = p1['id']
                 val['y'] = score
                 intersection.append(val)
@@ -95,9 +93,6 @@ def intersection(l1, l2):
     return intersection
 
 def get_doc_url(documents, id):
-    '''
-    gets the doc url from a list of document paths given a document id
-    '''
     i = id - 1 # because id starts at 1
     doc = documents[i]
     with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
@@ -106,3 +101,10 @@ def get_doc_url(documents, id):
             return content['url']
     return ''
 
+def main():
+    print(inputQuery())
+    input("Press Enter to continue")
+    
+
+if __name__ == "__main__":
+    main()
