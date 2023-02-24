@@ -43,7 +43,7 @@ def search(documents, index, N, k):
         for q in query:
             # print(q)
             #queries.append(stemmer.stem(q))
-            # assuming the stem exists will deal with it not existing later
+            # put posting list and length into priority queue so smaller lists will be checked first
             postings.put((len(index[stemmer.stem(q)]), index[stemmer.stem(q)]))
             #print(len(index[stemmer.stem(q)]))
         # tfidf = True
@@ -53,11 +53,13 @@ def search(documents, index, N, k):
         #         w = tfidf(N, i, len(p))
         #         i['y'] = w
         #     postings.put(len(p), p)
+        #more  than one word in query
         while(postings.qsize() > 1):
             l1 = postings.get()[1]
             # print(l1)
             l2 = postings.get()[1]
             # intersection = intersection(l1, l2, N, tfidf)
+            # get intersection of all words in query (the documents that contain all the words in query)
             intersection = compute_intersection(l1, l2)
             postings.put((len(intersection), intersection))
             # tfidf = False
@@ -66,6 +68,7 @@ def search(documents, index, N, k):
         final = postings.get()
         size = final[0]
         if size == 0:
+            # no interesection/no document that contains all words
             print()
             print(f'Found 0 results for {queries}.')
             print()
@@ -73,6 +76,8 @@ def search(documents, index, N, k):
         final = final[1]
         #print(final)
         for d in final:
+            # put into priority queue with score 
+            # have to use -score so the highest score will be popped first
             ids.put((-d['y'], d['id']))
         # get top k results
         total_results = ids.qsize()
@@ -80,6 +85,7 @@ def search(documents, index, N, k):
         for _ in range(k):
             id = ids.get()[1]
             while(True):
+                # make sure no fragements/duplicates
                 url = get_doc_url(documents, id)
                 if urldefrag(url)[1] != "":
                     url = urldefrag(url)[0]
