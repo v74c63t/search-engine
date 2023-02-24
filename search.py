@@ -8,7 +8,7 @@ from index import build_index, sort_and_tfidf, get_doc_paths
 from urllib.parse import urldefrag
 
 def input_query():
-    queries = input("Please enter your search terms \n >> ")
+    queries = input("Please enter your search query \n  >> ")
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     # remove words if not alnum
     return queries, set(word for word in words if word.isalnum()) # decide what do with queries that contain duplicate words later
@@ -94,7 +94,7 @@ def search(documents, index, N, k):
         if ids.empty():
             break
     print()
-    print(f'Found {total_results} results for {queries}\nReturning top {len(results)} results')
+    print(f'Found {total_results} results for {queries}. Returning top {len(results)} results.')
     for url in results:
         print(url)
 
@@ -158,7 +158,6 @@ def get_doc_url(documents, id):
 
 def main():
     index, N, documents = load_index("./DEV")
-    user_input = ''
     while(True):
         user_input = input("Press the enter key to continue or input quit to exit: ")
         if user_input == 'quit': break
@@ -167,6 +166,7 @@ def main():
         # print(input_query())
         # # user_input = input("Press Enter to continue or input quit() to exit")
         # print(user_input)
+    index.clear()
 
 
 if __name__ == "__main__":
