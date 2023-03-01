@@ -83,6 +83,18 @@ def get_doc_paths(path):
                 documents.append(root+'/'+name)
     return documents
 
+# may change it to be implemented during build index
+def doc_url_file(documents):
+    id = 1
+    urls = dict()
+    for doc in documents:
+        with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
+            content = json.load(f)
+            urls[id] = content['url']
+        id+=1
+    with open('doc_url.json', 'w') as file:
+        json.dump(urls, file)
+
 def sort_and_tfidf(N): # not sure if correct
     '''
     sorts the keys alphabetically
@@ -126,4 +138,5 @@ class PostingEncoder(JSONEncoder):
 
 
 # if __name__ == "__main__":
-#     build_index(get_doc_paths('./DEV'))
+#     # build_index(get_doc_paths('./DEV'))
+#     doc_url_file(get_doc_paths('./DEV'))

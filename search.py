@@ -13,10 +13,11 @@ def input_query():
     # remove words if not alnum
     return queries, set(word for word in words if word.isalnum()) # decide what do with queries that contain duplicate words later
 
-def load_index(path):
+def load_index():
     file_path = Path('./index.json')
-    documents = get_doc_paths(path)  
-    N = len(documents) 
+    with open('doc_url.json', 'r') as file:
+        documents = json.load(file) 
+    N = len(documents.keys()) 
     if not Path.is_file(file_path):
         build_index(documents)
         #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
@@ -86,7 +87,8 @@ def search(documents, index, N, k):
             id = ids.get()[1]
             while(True):
                 # make sure no fragements/duplicates
-                url = get_doc_url(documents, id)
+                # url = get_doc_url(documents, id)
+                url = documents[str(id)]
                 if urldefrag(url)[1] != "":
                     url = urldefrag(url)[0]
                     if url in results:
@@ -163,20 +165,20 @@ def compute_intersection(l1, l2):
             break
     return intersection
 
-def get_doc_url(documents, id):
-    '''
-    gets the doc url from a list of document paths given a document id
-    '''
-    i = id - 1 # because id starts at 1
-    doc = documents[i]
-    with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
-        content = json.load(f)
-        if 'url' in content:
-            return content['url']
-    return ''
+# def get_doc_url(documents, id):
+#     '''
+#     gets the doc url from a list of document paths given a document id
+#     '''
+#     i = id - 1 # because id starts at 1
+#     doc = documents[i]
+#     with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
+#         content = json.load(f)
+#         if 'url' in content:
+#             return content['url']
+#     return ''
 
 def main():
-    index, N, documents = load_index("./DEV")
+    index, N, documents = load_index()
     while(True):
         user_input = input("Press the enter key to continue or input quit to exit: ")
         if user_input == 'quit': break
