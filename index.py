@@ -126,10 +126,14 @@ class Posting():
     def __init__(self, doc_id):
         self.id = doc_id
         self.y = 1 # term freq / will turn into tfidf later
+        # self.f = defaultdict(int) not sure yet will prob give title, h, strong weights depends 3,2,1?
     def add_count(self):
         self.y+=1
     def get_doc_id(self): 
         return self.id
+    # def add_field_count(self, field):
+    #     self.f[field] += 1
+    # or just add count
 
 # this class ensures that a Posting class object can be dumped into a json file
 class PostingEncoder(JSONEncoder):
