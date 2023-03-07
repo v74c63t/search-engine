@@ -49,6 +49,20 @@ def build_index(documents):
                                 # if there is a value associated with the word and the previous posting is not for this
                                 # document, we just append a new posting for the document at the end of the list 
                                 index[stem].append(Posting(id))
+                    # check for importance
+                    importance = set(stemmer.stem(title.text.strip()) for title in soup.find_all('title'))
+                    for title in importance:
+                        index[title][-1].importance('title')
+                    importance = set(stemmer.stem(h1.text.strip()) for h1 in soup.find_all('h1'))
+                    for h1 in importance:
+                        index[h1][-1].importance('h1')
+                    importance = set(stemmer.stem(h2_or_h3.text.strip()) for h2_or_h3 in soup.find_all(['h2', 'h3']))
+                    for h2_or_h3 in importance:
+                        index[h2_or_h3][-1].importance('h2/h3')
+                    importance = set(stemmer.stem(bold.text.strip()) for bold in soup.find_all(['strong', 'b']))
+                    for bold in importance:
+                        index[bold][-1].importance('strong/b')
+
         # we save to disk using json dump and json load
         file_path = Path('./index.json')
         # if an index.json file does not already exist, there is no partial index we need to load and merge with the current
@@ -110,10 +124,13 @@ def sort_and_tfidf(N): # not sure if correct
             tf = 1 + math.log(p['y'], 10)
             idf = math.log((N/v_len), 10)
             w = tf * idf
-            p['y'] = w # put here temporarily will prob rename/create new attribute and rebuild index later
+            if p['f'] != 0:
+                #not sure yet
+                w *= p['f']
+            p['y'] = w 
         # # sort by tfidf
         # index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
-        index[k] = sorted(v, key=lambda x: x['id']) # sort by doc_id
+        # index[k] = sorted(v, key=lambda x: x['id']) # sort by doc_id
     with open('index.json', 'w') as file:
         alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n') # sort alphabetically/puts each key-val pair on new line
         index.clear()
@@ -127,12 +144,21 @@ class Posting():
         self.id = doc_id
         self.y = 1 # term freq / will turn into tfidf later
         # self.f = defaultdict(int) not sure yet will prob give title, h, strong weights depends 3,2,1?
+        self.f = 0 
     def add_count(self):
         self.y+=1
     def get_doc_id(self): 
         return self.id
-    # def add_field_count(self, field):
-    #     self.f[field] += 1
+    def importance(self, field):
+        #not sure yet
+        if field == 'title':
+            self.f += 5
+        elif field == 'h1':
+            self.f += 4
+        elif field == 'h2/h3':
+            self.f += 3
+        elif field == 'strong/b':
+            self.f += 2
     # or just add count
 
 # this class ensures that a Posting class object can be dumped into a json file
