@@ -11,7 +11,7 @@ def input_query():
     queries = input("Please enter your search query \n  >> ")
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     # remove words if not alnum
-    return queries, set(word for word in words if word.isalnum()) # decide what do with queries that contain duplicate words later
+    return queries, [word for word in words if word.isalnum()] # decide what do with queries that contain duplicate words later
 
 def load_index():
     file_path = Path('./index.json')
@@ -26,6 +26,21 @@ def load_index():
         index = json.load(file)
     return index, N, documents
 
+def get_query_tfidf(query, N, df_dict):
+    query_tfidf = dict()
+    len = len(query)
+    parsed = set(query)
+    for p in parsed:
+        freq = 0
+        for q in query:
+            if p == q:
+                freq+=1
+        tf = 1 + math.log(freq, 10)
+        idf = math.log(N/df_dict[p])
+        score = tf*idf
+        query_tfidf['p'] = score
+    return query_tfidf
+
 def search(documents, index, N, k):
     # file_path = Path('./index.json')
     # documents = get_doc_paths(path)  
@@ -37,15 +52,29 @@ def search(documents, index, N, k):
     # with open('index.json') as file:
     #     index = json.load(file)
     queries, query = input_query()
+    if query == []:
+        print()
+        print(f'Found 0 results for {queries}.')
+        print() 
+        return
+    original = query
+    query = set(query)
     #queries = []
     stemmer = nltk.PorterStemmer()
     postings = PriorityQueue()
     try:
+        df=dict()
         for q in query:
             # print(q)
             #queries.append(stemmer.stem(q))
             # put posting list and length into priority queue so smaller lists will be checked first
-            postings.put((len(index[stemmer.stem(q)]), index[stemmer.stem(q)]))
+            p = index[stemmer.stem(q)]
+            q_len = len(p)
+            postings.put((q_len, p))
+            df['q'] = q_len
+            query_tfidf = get_query_tfidf(original, N, df)
+            df.clear()
+
             #print(len(index[stemmer.stem(q)]))
         # tfidf = True
         # if postings.qsize == 1:
