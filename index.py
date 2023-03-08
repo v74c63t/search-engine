@@ -21,7 +21,7 @@ def build_index(documents):
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
     while len(documents) != 0:
-        #print(len(documents))
+        print(len(documents))
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         urls = dict()
@@ -31,6 +31,7 @@ def build_index(documents):
                 content = json.load(f)
                 url = urldefrag(content['url'])[0]
                 if url in urls.values():
+                    id-=1
                     continue
                 urls[id] = url
                 if 'content' in content:
@@ -67,24 +68,28 @@ def build_index(documents):
                     # importance: title > h1 > h2 = h3 > strong = b
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for title in soup.find_all('title') 
-                                     for word in nltk.tokenize.word_tokenize(title.text.strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(title.get_text(' ').strip().lower()) if word.isalnum()) 
                     for title in importance:
-                        index[title][-1].importance('title')
+                        try:index[title][-1].importance('title')
+                        except(IndexError): continue
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for h1 in soup.find_all('h1') 
-                                     for word in nltk.tokenize.word_tokenize(h1.text.strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(h1.get_text(' ').strip().lower()) if word.isalnum()) 
                     for h1 in importance:
-                        index[h1][-1].importance('h1')
+                        try:index[h1][-1].importance('h1')
+                        except(IndexError): continue
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for h2 in soup.find_all('h2') 
-                                     for word in nltk.tokenize.word_tokenize(h2.text.strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(h2.get_text(' ').strip().lower()) if word.isalnum()) 
                     for h2 in importance:
-                        index[h2][-1].importance('h2/h3')
+                        try:index[h2][-1].importance('h2')
+                        except(IndexError): continue
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for h3_or_bold in soup.find_all(['h3','strong', 'b']) 
-                                     for word in nltk.tokenize.word_tokenize(h3_or_bold.text.strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(h3_or_bold.get_text(' ').strip().lower()) if word.isalnum()) 
                     for h3_or_bold in importance:
-                        index[h3_or_bold][-1].importance('strong/b')
+                        try:index[h3_or_bold][-1].importance('h3/strong/b')
+                        except(IndexError): continue
 
         # we save to disk using json dump and json load
         file_path = Path('./index.json')
@@ -100,7 +105,10 @@ def build_index(documents):
                 data = json.load(file)
             # we merge the index by adding the values together if the keys are the same
             for k, v in index.items():
-                data[k] += v
+                try:
+                    data[k] += v
+                except(KeyError):
+                    data[k] =[v]
             with open('index.json', 'w') as file:
                 json.dump(data, file, cls=PostingEncoder)
         # we empty out the index before continuing onto the next batch of documents
@@ -108,6 +116,8 @@ def build_index(documents):
     with open('doc_url.json', 'w') as file:
         json.dump(urls, file)
     #report(id)
+    # sort_and_tfidf(len(urls.keys()))
+    urls.clear()
     return
 
 def get_doc_paths(path):
@@ -235,7 +245,7 @@ class PostingEncoder(JSONEncoder):
         return o.__dict__
 
 
-if __name__ == "__main__":
-    index_pos()
-#     # build_index(get_doc_paths('./DEV'))
+# if __name__ == "__main__":
+    # index_pos()
+    # build_index(get_doc_paths('./DEV'))
 #     doc_url_file(get_doc_paths('./DEV'))
