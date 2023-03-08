@@ -10,6 +10,7 @@ from pathlib import Path
 import math
 # debating whether to use this
 import unicodedata
+from urllib.parse import urldefrag
 
 def build_index(documents):
     # index is a defaultdict with keys of strings and values of Posting lists 
@@ -23,10 +24,15 @@ def build_index(documents):
         #print(len(documents))
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
+        urls = dict()
         for b in batch:
             id+=1
             with open(b, 'r', encoding='utf-8', errors='ignore') as f:
                 content = json.load(f)
+                url = urldefrag(content['url'])[0]
+                if url in urls.values():
+                    continue
+                urls[id] = url
                 if 'content' in content:
                     content = content['content']
                     # we get the text content of the file with BeautifulSoup
@@ -36,10 +42,10 @@ def build_index(documents):
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     for t in tokens:
                         # debating whether to use this
-                        norm = unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode()
+                        #norm = unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode()
                         # we port stem the word before it is added to the index
                         stemmer = nltk.PorterStemmer()
-                        stem = stemmer.stem(t)#port stem(t) (look at nltk)
+                        stem = stemmer.stem(unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode())#port stem(t) (look at nltk)
                         # as long as the word is alphanumeric it is added to the index
                         if(stem.isalnum()):
                             if index[stem] == []: 
@@ -59,22 +65,26 @@ def build_index(documents):
                     # then tokenize the text in those tags
                     # and find it in index to add weights to self.f
                     # importance: title > h1 > h2 = h3 > strong = b
-                    importance = set(stemmer.stem(word) for title in soup.find_all('title') 
+                    importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
+                                     for title in soup.find_all('title') 
                                      for word in nltk.tokenize.word_tokenize(title.text.strip().lower()) if word.isalnum()) 
                     for title in importance:
                         index[title][-1].importance('title')
-                    importance = set(stemmer.stem(word) for h1 in soup.find_all('h1') 
+                    importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
+                                     for h1 in soup.find_all('h1') 
                                      for word in nltk.tokenize.word_tokenize(h1.text.strip().lower()) if word.isalnum()) 
                     for h1 in importance:
                         index[h1][-1].importance('h1')
-                    importance = set(stemmer.stem(word) for h2_or_h3 in soup.find_all(['h2', 'h3']) 
-                                     for word in nltk.tokenize.word_tokenize(h2_or_h3.text.strip().lower()) if word.isalnum()) 
-                    for h2_or_h3 in importance:
-                        index[h2_or_h3][-1].importance('h2/h3')
-                    importance = set(stemmer.stem(word) for bold in soup.find_all(['strong', 'b']) 
-                                     for word in nltk.tokenize.word_tokenize(bold.text.strip().lower()) if word.isalnum()) 
-                    for bold in importance:
-                        index[bold][-1].importance('strong/b')
+                    importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
+                                     for h2 in soup.find_all('h2') 
+                                     for word in nltk.tokenize.word_tokenize(h2.text.strip().lower()) if word.isalnum()) 
+                    for h2 in importance:
+                        index[h2][-1].importance('h2/h3')
+                    importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
+                                     for h3_or_bold in soup.find_all(['h3','strong', 'b']) 
+                                     for word in nltk.tokenize.word_tokenize(h3_or_bold.text.strip().lower()) if word.isalnum()) 
+                    for h3_or_bold in importance:
+                        index[h3_or_bold][-1].importance('strong/b')
 
         # we save to disk using json dump and json load
         file_path = Path('./index.json')
@@ -95,6 +105,8 @@ def build_index(documents):
                 json.dump(data, file, cls=PostingEncoder)
         # we empty out the index before continuing onto the next batch of documents
         index.clear()
+    with open('doc_url.json', 'w') as file:
+        json.dump(urls, file)
     #report(id)
     return
 
@@ -211,9 +223,9 @@ class Posting():
             self.f += 5
         elif field == 'h1':
             self.f += 4
-        elif field == 'h2/h3':
+        elif field == 'h2':
             self.f += 3
-        elif field == 'strong/b':
+        elif field == 'h3/strong/b':
             self.f += 2
     # or just add count
 
