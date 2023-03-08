@@ -13,9 +13,27 @@ def input_query():
     queries = input("Please enter your search query \n  >> ")
     start = time.time()
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
-    # remove words if not alnum
     stemmer = nltk.PorterStemmer()
-    return queries, [stemmer.stem(word) for word in words if word.isalnum()], start # decide what do with queries that contain duplicate words later
+    stops = set(stopwords.words('english'))
+    non_parsed = []
+    parsed = []
+    for word in words:
+        if word.isalnum():
+            if word in stops:
+                non_parsed.append(stemmer.stem(word))
+            else:
+                parsed.append(stemmer.stem(word))
+                non_parsed.append(parsed[-1])
+    if non_parsed != []:
+        if len(parsed)/len(non_parsed) < 0.5:
+            return queries, non_parsed, start
+        else:
+            return queries, parsed, start
+    else:
+        return queries, non_parsed, start
+    # remove words if not alnum
+    # stemmer = nltk.PorterStemmer()
+    # return queries, [stemmer.stem(word) for word in words if word.isalnum()], start
 
 def load_index():
     # file_path = Path('./index.json')
@@ -34,9 +52,9 @@ def load_index():
 
 def get_query_tfidf(query, N, df_dict):
     query_tfidf = dict()
-    stemmer = nltk.PorterStemmer()
-    # query_len = len(query)
-    query = [stemmer.stem(q) for q in query]
+    # stemmer = nltk.PorterStemmer()
+    # # query_len = len(query)
+    # query = [stemmer.stem(q) for q in query]
     parsed = set(query)
     for p in parsed:
         freq = 0
@@ -60,10 +78,11 @@ def search(documents, index_pos, N, k):
     # with open('index.json') as file:
     #     index = json.load(file)
     queries, query, start = input_query()
+    print(query)
     if len(query) == 0:
         print()
         print(f'Found 0 results for {queries}.')
-        print((time.time()-start)* 10**3)
+        print((time.time()-start)* 10**3, 'ms')
         print() 
         return
     original = query
