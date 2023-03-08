@@ -108,7 +108,7 @@ def build_index(documents):
                 try:
                     data[k] += v
                 except(KeyError):
-                    data[k] =[v]
+                    data[k] = v
             with open('index.json', 'w') as file:
                 json.dump(data, file, cls=PostingEncoder)
         # we empty out the index before continuing onto the next batch of documents
@@ -162,12 +162,13 @@ def sort_and_tfidf(N): # not sure if correct
     for _, v in index.items():
         v_len = len(v)
         for p in v:
-            tf = 1 + math.log(p['y'], 10)
+            print(p)
+            tf = 1 + math.log(p["y"], 10)
             idf = math.log((N/v_len), 10)
             w = tf * idf
-            # if p['f'] != 0:
-            #     #not sure yet
-            #     w *= p['f']
+            if p["f"] != 0:
+                #not sure yet
+                w *= p['f']
             p['y'] = w 
         # # sort by tfidf
         # index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
@@ -255,3 +256,4 @@ if __name__ == "__main__":
     # index_pos()
     build_index(get_doc_paths('./DEV'))
     # doc_url_file(get_doc_paths('./DEV'))
+    # sort_and_tfidf(53792)
