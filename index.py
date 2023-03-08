@@ -50,11 +50,15 @@ def build_index(documents):
                                 # document, we just append a new posting for the document at the end of the list 
                                 index[stem].append(Posting(id))
                     # check for importance
+                    # find all words with important tags and add weights to them
+                    # first find all text with certain tags
+                    # then tokenize the text in those tags
+                    # and find it in index to add weights to self.f
+                    # importance: title > h1 > h2 = h3 > strong = b
                     importance = set(stemmer.stem(word) for title in soup.find_all('title') 
                                      for word in nltk.tokenize.word_tokenize(title.text.strip().lower()) if word.isalnum()) 
                     for title in importance:
                         index[title][-1].importance('title')
-                    importance = set(stemmer.stem(h1.text.strip()) for h1 in soup.find_all('h1'))
                     importance = set(stemmer.stem(word) for h1 in soup.find_all('h1') 
                                      for word in nltk.tokenize.word_tokenize(h1.text.strip().lower()) if word.isalnum()) 
                     for h1 in importance:
