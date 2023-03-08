@@ -8,6 +8,8 @@ from json import JSONEncoder
 # from reportM1 import report
 from pathlib import Path
 import math
+# debating whether to use this
+import unicodedata
 
 def build_index(documents):
     # index is a defaultdict with keys of strings and values of Posting lists 
@@ -33,6 +35,8 @@ def build_index(documents):
                     # we parse the text with nltk
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     for t in tokens:
+                        # debating whether to use this
+                        norm = unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode()
                         # we port stem the word before it is added to the index
                         stemmer = nltk.PorterStemmer()
                         stem = stemmer.stem(t)#port stem(t) (look at nltk)
@@ -127,15 +131,15 @@ def sort_and_tfidf(N): # not sure if correct
     '''
     with open('index.json') as file:
         index = json.load(file)
-    for k, v in index.items():
+    for _, v in index.items():
         v_len = len(v)
         for p in v:
             tf = 1 + math.log(p['y'], 10)
             idf = math.log((N/v_len), 10)
             w = tf * idf
-            if p['f'] != 0:
-                #not sure yet
-                w *= p['f']
+            # if p['f'] != 0:
+            #     #not sure yet
+            #     w *= p['f']
             p['y'] = w 
         # # sort by tfidf
         # index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
@@ -145,6 +149,49 @@ def sort_and_tfidf(N): # not sure if correct
         index.clear()
         #json.dump(index, file, cls=PostingEncoder)
         file.write(alphabetical)
+
+def index_pos():
+    # temp might change
+    c = '0'
+    pos = 0
+    index_pos = dict()
+    index_pos[c] = 0
+    with open('index.json') as file:
+        next_c = chr(ord(c) + 1)
+        line = ""
+        while next_c <= 'z':
+            lines = 1
+            line = file.readline()
+            while(line != ""):
+                lines += 1
+                if line[1:].startswith(next_c):
+                    index_pos[c] = (index_pos[c], lines-1) # position, num of lines
+                    index_pos[next_c] = pos
+                    pos += len(line)
+                    c = next_c
+                    if next_c == '9':
+                        next_c = 'a'
+                        break
+                    else:
+                        next_c = chr(ord(c) + 1)
+                        break
+                else:
+                    pos += len(line)
+                line = file.readline()
+            if line == "":
+                if type(index_pos[c]) != tuple:
+                    index_pos[c] = (index_pos[c], lines)
+                else:
+                    index_pos[next_c] = (index_pos[next_c], lines)
+        if line != "":
+            lines = 1
+            line = file.readline()
+            while(line != ""):
+                lines += 1
+                line = file.readline()
+            index_pos[c] = (index_pos[c], lines)
+    with open('index_pos.json', 'w') as file:
+        json.dump(index_pos, file)
 
 
 class Posting():
@@ -176,6 +223,7 @@ class PostingEncoder(JSONEncoder):
         return o.__dict__
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    index_pos()
 #     # build_index(get_doc_paths('./DEV'))
 #     doc_url_file(get_doc_paths('./DEV'))
