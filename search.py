@@ -6,13 +6,16 @@ import math
 from queue import PriorityQueue
 from index import build_index, sort_and_tfidf, get_doc_paths
 from urllib.parse import urldefrag
+import time
+from nltk.corpus import stopwords
 
 def input_query():
     queries = input("Please enter your search query \n  >> ")
+    start = time.time()
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     # remove words if not alnum
     stemmer = nltk.PorterStemmer()
-    return queries, [stemmer.stem(word) for word in words if word.isalnum()] # decide what do with queries that contain duplicate words later
+    return queries, [stemmer.stem(word) for word in words if word.isalnum()], start # decide what do with queries that contain duplicate words later
 
 def load_index():
     # file_path = Path('./index.json')
@@ -56,20 +59,24 @@ def search(documents, index_pos, N, k):
     #     sort_and_tfidf(N)
     # with open('index.json') as file:
     #     index = json.load(file)
-    queries, query = input_query()
+    queries, query, start = input_query()
     if len(query) == 0:
         print()
         print(f'Found 0 results for {queries}.')
+        print((time.time()-start)* 10**3)
         print() 
         return
     original = query
-    query = set(query)
+    query = sorted(set(query))
     #queries = []
     # stemmer = nltk.PorterStemmer()
     postings = PriorityQueue()
     try:
         df=dict()
-        for q in query:
+        i = 0
+        # for q in query:
+        while i < len(query):
+            q = query[i]
             #queries.append(stemmer.stem(q))
             # put posting list and length into priority queue so smaller lists will be checked first
             pos, lines = index_pos[q[0]]
@@ -80,16 +87,23 @@ def search(documents, index_pos, N, k):
                     index += file.readline()
                 index = index[:-3]
                 if index[-1] != ']':
-                    index += ']}'
+                    index += '}]}'
                 else:
                     index += '}'
                 if index[0] != '{':
                     index = '{' + index
-            index = json.loads(index)    
-            p = index[q]
-            q_len = len(p)
-            postings.put((q_len, p))
-            df[q] = q_len
+            index = json.loads(index)
+            while True:    
+                p = index[q]
+                q_len = len(p)
+                postings.put((q_len, p))
+                df[q] = q_len
+                i += 1
+                if i < len(query):
+                    if query[i][0] != query[i-1][0]:
+                        break
+                else:
+                    break
             index.clear()
         query_tfidf = get_query_tfidf(original, N, df)
         df.clear()
@@ -119,6 +133,7 @@ def search(documents, index_pos, N, k):
             # no interesection/no document that contains all words
             print()
             print(f'Found 0 results for {queries}.')
+            print((time.time()-start)* 10**3, 'ms')
             print()
             return
         final = final[1]
@@ -160,10 +175,12 @@ def search(documents, index_pos, N, k):
         print(f'Found {total_results} results for {queries}. Returning top {len(results)} results...')
         for url in results:
             print(url)
+        print((time.time()-start)* 10**3, 'ms')
         print()
     except(KeyError):
         print()
         print(f'Found 0 results for {queries}.')
+        print((time.time()-start)* 10**3, 'ms')
         print()
 
 
