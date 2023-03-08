@@ -18,13 +18,15 @@ def load_index():
     with open('doc_url.json', 'r') as file:
         documents = json.load(file) 
     N = len(documents.keys()) 
-    if not Path.is_file(file_path):
-        build_index(documents)
-        #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
-        sort_and_tfidf(N)
-    with open('index.json') as file:
-        index = json.load(file)
-    return index, N, documents
+    # if not Path.is_file(file_path):
+    #     build_index(documents)
+    #     #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
+    #     sort_and_tfidf(N)
+    # with open('index.json') as file:
+    #     index = json.load(file)
+    with open('index_pos.json') as file:
+        index_pos = json.load(file)
+    return index_pos, N, documents
 
 def get_query_tfidf(query, N, df_dict):
     query_tfidf = dict()
@@ -40,10 +42,10 @@ def get_query_tfidf(query, N, df_dict):
         tf = 1 + math.log(freq, 10)
         idf = math.log(N/df_dict[p])
         score = tf*idf
-        query_tfidf['p'] = score
+        query_tfidf[p] = score
     return query_tfidf
 
-def search(documents, index, N, k):
+def search(documents, index_pos, N, k):
     # file_path = Path('./index.json')
     # documents = get_doc_paths(path)  
     # N = len(documents) 
@@ -69,10 +71,25 @@ def search(documents, index, N, k):
         for q in query:
             #queries.append(stemmer.stem(q))
             # put posting list and length into priority queue so smaller lists will be checked first
+            pos, lines = index_pos[stemmer.stem(q)[0]]
+            with open('index.json') as file:
+                file.seek(pos)
+                index = ""
+                for _ in range(lines):
+                    index += file.readline()
+                index = index[:-3]
+                if index[-1] != ']':
+                    index += ']}'
+                else:
+                    index += '}'
+                if index[0] != '{':
+                    index = '{' + index
+            index = json.loads(index)    
             p = index[stemmer.stem(q)]
             q_len = len(p)
             postings.put((q_len, p))
-            df[q] = q_len
+            df[stemmer.stem(q)] = q_len
+            index.clear()
         query_tfidf = get_query_tfidf(original, N, df)
         df.clear()
             #print(len(index[stemmer.stem(q)]))
@@ -210,16 +227,17 @@ def cosine(q, d):
 #     return ''
 
 def main():
-    index, N, documents = load_index()
+    index_pos, N, documents = load_index()
     while(True):
         user_input = input("Press the enter key to continue or input quit to exit: ")
         if user_input == 'quit': break
         print()
-        search(documents, index, N, 5)
+        search(documents, index_pos, N, 5)
         # print(input_query())
         # # user_input = input("Press Enter to continue or input quit() to exit")
         # print(user_input)
-    index.clear()
+    documents.clear()
+    index_pos.clear()
 
 
 if __name__ == "__main__":
