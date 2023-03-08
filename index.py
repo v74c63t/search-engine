@@ -48,7 +48,7 @@ def build_index(documents):
                         stemmer = nltk.PorterStemmer()
                         stem = stemmer.stem(unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode())#port stem(t) (look at nltk)
                         # as long as the word is alphanumeric it is added to the index
-                        if(stem.isalnum()):
+                        if(stem.isalnum() and stem != ""):
                             if index[stem] == []: 
                                 # if there is no value associated with the word, we append a posting for that document
                                 index[stem].append(Posting(id))
@@ -68,25 +68,25 @@ def build_index(documents):
                     # importance: title > h1 > h2 = h3 > strong = b
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for title in soup.find_all('title') 
-                                     for word in nltk.tokenize.word_tokenize(title.get_text(' ').strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(title.get_text(' ').strip().lower()) if word.isalnum() and word != "") 
                     for title in importance:
                         try:index[title][-1].importance('title')
                         except(IndexError): continue
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for h1 in soup.find_all('h1') 
-                                     for word in nltk.tokenize.word_tokenize(h1.get_text(' ').strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(h1.get_text(' ').strip().lower()) if word.isalnum() and word != "") 
                     for h1 in importance:
                         try:index[h1][-1].importance('h1')
                         except(IndexError): continue
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for h2 in soup.find_all('h2') 
-                                     for word in nltk.tokenize.word_tokenize(h2.get_text(' ').strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(h2.get_text(' ').strip().lower()) if word.isalnum() and word != "") 
                     for h2 in importance:
                         try:index[h2][-1].importance('h2')
                         except(IndexError): continue
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for h3_or_bold in soup.find_all(['h3','strong', 'b']) 
-                                     for word in nltk.tokenize.word_tokenize(h3_or_bold.get_text(' ').strip().lower()) if word.isalnum()) 
+                                     for word in nltk.tokenize.word_tokenize(h3_or_bold.get_text(' ').strip().lower()) if word.isalnum() and word != "") 
                     for h3_or_bold in importance:
                         try:index[h3_or_bold][-1].importance('h3/strong/b')
                         except(IndexError): continue
@@ -162,7 +162,6 @@ def sort_and_tfidf(N): # not sure if correct
     for _, v in index.items():
         v_len = len(v)
         for p in v:
-            print(p)
             tf = 1 + math.log(p["y"], 10)
             idf = math.log((N/v_len), 10)
             w = tf * idf
@@ -252,8 +251,8 @@ class PostingEncoder(JSONEncoder):
         return o.__dict__
 
 
-if __name__ == "__main__":
-    # index_pos()
-    build_index(get_doc_paths('./DEV'))
+# if __name__ == "__main__":
+#     index_pos()
+    # build_index(get_doc_paths('./DEV'))
     # doc_url_file(get_doc_paths('./DEV'))
     # sort_and_tfidf(53792)
