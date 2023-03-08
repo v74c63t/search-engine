@@ -20,11 +20,11 @@ def build_index(documents):
     id = 0
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
+    urls = dict()
     while len(documents) != 0:
         print(len(documents))
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
-        urls = dict()
         for b in batch:
             id+=1
             with open(b, 'r', encoding='utf-8', errors='ignore') as f:
@@ -134,13 +134,19 @@ def get_doc_paths(path):
 
 # may change it to be implemented during build index
 def doc_url_file(documents):
-    id = 1
+    id = 0
     urls = dict()
     for doc in documents:
+        id+=1
         with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
             content = json.load(f)
-            urls[id] = content['url']
-        id+=1
+            # urls[id] = content['url']
+            url = urldefrag(content['url'])[0]
+            if url in urls.values():
+                id -=1
+                continue
+            urls[id] = url
+        
     with open('doc_url.json', 'w') as file:
         json.dump(urls, file)
 
@@ -245,7 +251,7 @@ class PostingEncoder(JSONEncoder):
         return o.__dict__
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
     # index_pos()
-    # build_index(get_doc_paths('./DEV'))
-#     doc_url_file(get_doc_paths('./DEV'))
+    build_index(get_doc_paths('./DEV'))
+    # doc_url_file(get_doc_paths('./DEV'))
