@@ -78,7 +78,6 @@ def search(documents, index_pos, N, k):
     # with open('index.json') as file:
     #     index = json.load(file)
     queries, query, start = input_query()
-    print(query)
     if len(query) == 0:
         print()
         print(f'Found 0 results for {queries}.')
@@ -116,7 +115,7 @@ def search(documents, index_pos, N, k):
                 p = index[q]
                 q_len = len(p)
                 postings.put((q_len, p))
-                df[q] = q_len
+                # df[q] = q_len
                 i += 1
                 if i < len(query):
                     if query[i][0] != query[i-1][0]:
@@ -124,8 +123,8 @@ def search(documents, index_pos, N, k):
                 else:
                     break
             index.clear()
-        query_tfidf = get_query_tfidf(original, N, df)
-        df.clear()
+        # query_tfidf = get_query_tfidf(original, N, df)
+        # df.clear()
             #print(len(index[stemmer.stem(q)]))
         # tfidf = True
         # if postings.qsize == 1:
@@ -166,27 +165,28 @@ def search(documents, index_pos, N, k):
         results = []
         for _ in range(k):
             id = ids.get()[1]
-            while(True):
-                # make sure no fragements/duplicates
-                # url = get_doc_url(documents, id)
-                url = documents[str(id)]
-                if urldefrag(url)[1] != "":
-                    url = urldefrag(url)[0]
-                    if url in results:
-                        if ids.empty():
-                            break
-                        id = ids.get()[1]
-                    else:
-                        results.append(url)
-                        break
-                else:
-                    if url in results:
-                        if ids.empty():
-                            break
-                        id = ids.get()[1]
-                    else:
-                        results.append(url)
-                        break
+            # while(True):
+            #     # make sure no fragements/duplicates
+            #     # url = get_doc_url(documents, id)
+            #     url = documents[str(id)]
+            #     if urldefrag(url)[1] != "":
+            #         url = urldefrag(url)[0]
+            #         if url in results:
+            #             if ids.empty():
+            #                 break
+            #             id = ids.get()[1]
+            #         else:
+            #             results.append(url)
+            #             break
+            #     else:
+            #         if url in results:
+            #             if ids.empty():
+            #                 break
+            #             id = ids.get()[1]
+            #         else:
+            #             results.append(url)
+            #             break
+            results.append(documents[str(id)])
             # results.append(get_doc_url(documents, id))
             if ids.empty():
                 break
