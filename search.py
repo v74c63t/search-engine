@@ -28,7 +28,9 @@ def load_index():
 
 def get_query_tfidf(query, N, df_dict):
     query_tfidf = dict()
-    len = len(query)
+    stemmer = nltk.PorterStemmer()
+    # query_len = len(query)
+    query = [stemmer.stem(q) for q in query]
     parsed = set(query)
     for p in parsed:
         freq = 0
@@ -52,7 +54,7 @@ def search(documents, index, N, k):
     # with open('index.json') as file:
     #     index = json.load(file)
     queries, query = input_query()
-    if query == []:
+    if len(query) == 0:
         print()
         print(f'Found 0 results for {queries}.')
         print() 
@@ -65,16 +67,14 @@ def search(documents, index, N, k):
     try:
         df=dict()
         for q in query:
-            # print(q)
             #queries.append(stemmer.stem(q))
             # put posting list and length into priority queue so smaller lists will be checked first
             p = index[stemmer.stem(q)]
             q_len = len(p)
             postings.put((q_len, p))
-            df['q'] = q_len
-            query_tfidf = get_query_tfidf(original, N, df)
-            df.clear()
-
+            df[q] = q_len
+        query_tfidf = get_query_tfidf(original, N, df)
+        df.clear()
             #print(len(index[stemmer.stem(q)]))
         # tfidf = True
         # if postings.qsize == 1:
@@ -193,6 +193,9 @@ def compute_intersection(l1, l2):
         except StopIteration:
             break
     return intersection
+
+def cosine(q, d):
+    return
 
 # def get_doc_url(documents, id):
 #     '''
