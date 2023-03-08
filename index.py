@@ -50,16 +50,21 @@ def build_index(documents):
                                 # document, we just append a new posting for the document at the end of the list 
                                 index[stem].append(Posting(id))
                     # check for importance
-                    importance = set(stemmer.stem(title.text.strip()) for title in soup.find_all('title'))
+                    importance = set(stemmer.stem(word) for title in soup.find_all('title') 
+                                     for word in nltk.tokenize.word_tokenize(title.text.strip().lower()) if word.isalnum()) 
                     for title in importance:
                         index[title][-1].importance('title')
                     importance = set(stemmer.stem(h1.text.strip()) for h1 in soup.find_all('h1'))
+                    importance = set(stemmer.stem(word) for h1 in soup.find_all('h1') 
+                                     for word in nltk.tokenize.word_tokenize(h1.text.strip().lower()) if word.isalnum()) 
                     for h1 in importance:
                         index[h1][-1].importance('h1')
-                    importance = set(stemmer.stem(h2_or_h3.text.strip()) for h2_or_h3 in soup.find_all(['h2', 'h3']))
+                    importance = set(stemmer.stem(word) for h2_or_h3 in soup.find_all(['h2', 'h3']) 
+                                     for word in nltk.tokenize.word_tokenize(h2_or_h3.text.strip().lower()) if word.isalnum()) 
                     for h2_or_h3 in importance:
                         index[h2_or_h3][-1].importance('h2/h3')
-                    importance = set(stemmer.stem(bold.text.strip()) for bold in soup.find_all(['strong', 'b']))
+                    importance = set(stemmer.stem(word) for bold in soup.find_all(['strong', 'b']) 
+                                     for word in nltk.tokenize.word_tokenize(bold.text.strip().lower()) if word.isalnum()) 
                     for bold in importance:
                         index[bold][-1].importance('strong/b')
 
