@@ -11,10 +11,11 @@ def input_query():
     queries = input("Please enter your search query \n  >> ")
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     # remove words if not alnum
-    return queries, [word for word in words if word.isalnum()] # decide what do with queries that contain duplicate words later
+    stemmer = nltk.PorterStemmer()
+    return queries, [stemmer.stem(word) for word in words if word.isalnum()] # decide what do with queries that contain duplicate words later
 
 def load_index():
-    file_path = Path('./index.json')
+    # file_path = Path('./index.json')
     with open('doc_url.json', 'r') as file:
         documents = json.load(file) 
     N = len(documents.keys()) 
@@ -64,14 +65,14 @@ def search(documents, index_pos, N, k):
     original = query
     query = set(query)
     #queries = []
-    stemmer = nltk.PorterStemmer()
+    # stemmer = nltk.PorterStemmer()
     postings = PriorityQueue()
     try:
         df=dict()
         for q in query:
             #queries.append(stemmer.stem(q))
             # put posting list and length into priority queue so smaller lists will be checked first
-            pos, lines = index_pos[stemmer.stem(q)[0]]
+            pos, lines = index_pos[q[0]]
             with open('index.json') as file:
                 file.seek(pos)
                 index = ""
@@ -85,10 +86,10 @@ def search(documents, index_pos, N, k):
                 if index[0] != '{':
                     index = '{' + index
             index = json.loads(index)    
-            p = index[stemmer.stem(q)]
+            p = index[q]
             q_len = len(p)
             postings.put((q_len, p))
-            df[stemmer.stem(q)] = q_len
+            df[q] = q_len
             index.clear()
         query_tfidf = get_query_tfidf(original, N, df)
         df.clear()
