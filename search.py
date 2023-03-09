@@ -15,19 +15,25 @@ def input_query():
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     stemmer = nltk.PorterStemmer()
     stops = set(stopwords.words('english'))
+    stop = []
     non_parsed = []
     parsed = []
     for word in words:
         if word.isalnum():
             if word in stops:
                 non_parsed.append(stemmer.stem(word))
+                stop.append(word)
             else:
                 parsed.append(stemmer.stem(word))
                 non_parsed.append(parsed[-1])
+    # ideas if more than a certain amt of stop words jus remove them sort by len then remove?
     if non_parsed != []:
         if len(parsed)/len(non_parsed) < 0.5:
             return queries, non_parsed, start
         else:
+            if len(stop) > 5:
+                stop = sorted(stop, key=lambda x: len(x), reverse=True)
+                parsed = parsed + stop[:5]
             return queries, parsed, start
     else:
         return queries, non_parsed, start
@@ -78,6 +84,7 @@ def search(documents, index_pos, N, k):
     # with open('index.json') as file:
     #     index = json.load(file)
     queries, query, start = input_query()
+    print(query)
     if len(query) == 0:
         print()
         print(f'Found 0 results for {queries}.')
@@ -213,11 +220,13 @@ def search(documents, index_pos, N, k):
             print(url)
         print((time.time()-start)* 10**3, 'ms')
         print()
+        return
     except(KeyError):
         print()
         print(f'Found 0 results for {queries}.')
         print((time.time()-start)* 10**3, 'ms')
         print()
+        return
 
 
 # def tfidf(N, p, v_len): # not sure if correct
