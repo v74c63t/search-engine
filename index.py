@@ -116,7 +116,7 @@ def build_index(documents):
     with open('doc_url.json', 'w') as file:
         json.dump(urls, file)
     #report(id)
-    # sort_and_tfidf(len(urls.keys()))
+    sort_and_tfidf(len(urls.keys()))
     urls.clear()
     return
 
@@ -178,48 +178,70 @@ def sort_and_tfidf(N): # not sure if correct
         #json.dump(index, file, cls=PostingEncoder)
         file.write(alphabetical)
 
+# def index_pos():
+#     # temp might change
+#     c = '0'
+#     pos = 0
+#     index_pos = dict()
+#     index_pos[c] = 0
+#     with open('index.json') as file:
+#         next_c = chr(ord(c) + 1)
+#         line = ""
+#         while next_c <= 'z':
+#             lines = 1
+#             line = file.readline()
+#             while(line != ""):
+#                 lines += 1
+#                 if line[1:].startswith(next_c):
+#                     index_pos[c] = (index_pos[c], lines-1) # position, num of lines
+#                     index_pos[next_c] = pos
+#                     pos += len(line)
+#                     c = next_c
+#                     if next_c == '9':
+#                         next_c = 'a'
+#                         break
+#                     else:
+#                         next_c = chr(ord(c) + 1)
+#                         break
+#                 else:
+#                     pos += len(line)
+#                 line = file.readline()
+#             if line == "":
+#                 if type(index_pos[c]) != tuple:
+#                     index_pos[c] = (index_pos[c], lines)
+#                 else:
+#                     index_pos[next_c] = (index_pos[next_c], lines)
+#         if line != "":
+#             lines = 1
+#             line = file.readline()
+#             while(line != ""):
+#                 lines += 1
+#                 line = file.readline()
+#             index_pos[c] = (index_pos[c], lines)
+#     with open('index_pos.json', 'w') as file:
+#         json.dump(index_pos, file)
+
 def index_pos():
     # temp might change
-    c = '0'
     pos = 0
     index_pos = dict()
-    index_pos[c] = 0
     with open('index.json') as file:
-        next_c = chr(ord(c) + 1)
-        line = ""
-        while next_c <= 'z':
-            lines = 1
-            line = file.readline()
-            while(line != ""):
-                lines += 1
-                if line[1:].startswith(next_c):
-                    index_pos[c] = (index_pos[c], lines-1) # position, num of lines
-                    index_pos[next_c] = pos
-                    pos += len(line)
-                    c = next_c
-                    if next_c == '9':
-                        next_c = 'a'
-                        break
-                    else:
-                        next_c = chr(ord(c) + 1)
-                        break
-                else:
-                    pos += len(line)
-                line = file.readline()
-            if line == "":
-                if type(index_pos[c]) != tuple:
-                    index_pos[c] = (index_pos[c], lines)
-                else:
-                    index_pos[next_c] = (index_pos[next_c], lines)
+        line = file.readline()
         if line != "":
-            lines = 1
+            i = line.find('":')
+            word = line[2:i]
+            index_pos[word] = pos
+            pos += len(line)
+        line = file.readline()
+        while line != "":
+            i = line.find('":')
+            word = line[1:i]
+            index_pos[word] = pos
+            pos += len(line)
             line = file.readline()
-            while(line != ""):
-                lines += 1
-                line = file.readline()
-            index_pos[c] = (index_pos[c], lines)
     with open('index_pos.json', 'w') as file:
         json.dump(index_pos, file)
+
 
 
 class Posting():
