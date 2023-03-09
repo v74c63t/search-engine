@@ -107,21 +107,24 @@ def search(documents, index_pos, N, k):
         # i = 0
         with open('index.json') as file:
             for q in query:
-                pos = index_pos[q]
-                file.seek(pos)
-                index = file.readline()
-                index = index[:-3]
-                if index[-1] != ']':
-                    index += '}]}'
-                else:
-                    index += '}'
-                if index[0] != '{':
-                    index = '{' + index
-                index = json.loads(index)
-                p = index[q]
-                q_len = len(p)
-                postings.put((q_len, p))
-                index.clear()
+                try:
+                    pos = index_pos[q]
+                    file.seek(pos)
+                    index = file.readline()
+                    index = index[:-3]
+                    if index[-1] != ']':
+                        index += '}]}'
+                    else:
+                        index += '}'
+                    if index[0] != '{':
+                        index = '{' + index
+                    index = json.loads(index)
+                    p = index[q]
+                    q_len = len(p)
+                    postings.put((q_len, p))
+                    index.clear()
+                except(KeyError):
+                    continue
         # for q in query:
         # while i < len(query):
         #     q = query[i]
