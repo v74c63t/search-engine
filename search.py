@@ -2,10 +2,10 @@
 from pathlib import Path
 import nltk
 import json
-import math
+# import math
 from queue import PriorityQueue
-from index import build_index, sort_and_tfidf, get_doc_paths
-from urllib.parse import urldefrag
+# from index import build_index, sort_and_tfidf, get_doc_paths
+# from urllib.parse import urldefrag
 import time
 from nltk.corpus import stopwords
 
@@ -265,8 +265,8 @@ def compute_intersection(l1, l2):
             break
     return intersection
 
-def cosine(q, d):
-    return
+# def cosine(q, d):
+#     return
 
 # def get_doc_url(documents, id):
 #     '''
