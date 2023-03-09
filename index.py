@@ -273,7 +273,8 @@ class PostingEncoder(JSONEncoder):
         return o.__dict__
 
 
-# if __name__ == "__main__":
+if __name__ == "__main__":
+    build_index()
 #     index_pos()
     # build_index(get_doc_paths('./DEV'))
     # doc_url_file(get_doc_paths('./DEV'))
