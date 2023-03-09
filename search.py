@@ -84,25 +84,19 @@ def search(documents, index_pos, N, k):
         print((time.time()-start)* 10**3, 'ms')
         print() 
         return
-    original = query
-    query = sorted(set(query))
+    # original = query
+    query = set(query)
     #queries = []
     # stemmer = nltk.PorterStemmer()
     postings = PriorityQueue()
     try:
-        df=dict()
-        i = 0
-        # for q in query:
-        while i < len(query):
-            q = query[i]
-            #queries.append(stemmer.stem(q))
-            # put posting list and length into priority queue so smaller lists will be checked first
-            pos, lines = index_pos[q[0]]
-            with open('index.json') as file:
+        # df=dict()
+        # i = 0
+        with open('index.json') as file:
+            for q in query:
+                pos = index_pos[q]
                 file.seek(pos)
-                index = ""
-                for _ in range(lines):
-                    index += file.readline()
+                index = file.readline()
                 index = index[:-3]
                 if index[-1] != ']':
                     index += '}]}'
@@ -110,19 +104,42 @@ def search(documents, index_pos, N, k):
                     index += '}'
                 if index[0] != '{':
                     index = '{' + index
-            index = json.loads(index)
-            while True:    
+                index = json.loads(index)
                 p = index[q]
                 q_len = len(p)
                 postings.put((q_len, p))
-                # df[q] = q_len
-                i += 1
-                if i < len(query):
-                    if query[i][0] != query[i-1][0]:
-                        break
-                else:
-                    break
-            index.clear()
+                index.clear()
+        # for q in query:
+        # while i < len(query):
+        #     q = query[i]
+        #     #queries.append(stemmer.stem(q))
+        #     # put posting list and length into priority queue so smaller lists will be checked first
+        #     pos, lines = index_pos[q[0]]
+        #     with open('index.json') as file:
+        #         file.seek(pos)
+        #         index = ""
+        #         for _ in range(lines):
+        #             index += file.readline()
+        #         index = index[:-3]
+        #         if index[-1] != ']':
+        #             index += '}]}'
+        #         else:
+        #             index += '}'
+        #         if index[0] != '{':
+        #             index = '{' + index
+        #     index = json.loads(index)
+        #     while True:    
+        #         p = index[q]
+        #         q_len = len(p)
+        #         postings.put((q_len, p))
+        #         # df[q] = q_len
+        #         i += 1
+        #         if i < len(query):
+        #             if query[i][0] != query[i-1][0]:
+        #                 break
+        #         else:
+        #             break
+        #     index.clear()
         # query_tfidf = get_query_tfidf(original, N, df)
         # df.clear()
             #print(len(index[stemmer.stem(q)]))
