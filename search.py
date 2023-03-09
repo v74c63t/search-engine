@@ -29,9 +29,16 @@ def input_query():
     # ideas if more than a certain amt of stop words jus remove them sort by len then remove?
     if non_parsed != []:
         if len(parsed)/len(non_parsed) < 0.5:
-            return queries, non_parsed, start
+            if len(stop) > 5:
+                print()
+                stop = sorted(stop, key=lambda x: len(x), reverse=True)
+                parsed = parsed + stop[:5]
+                return queries, parsed, start
+            else:
+                return queries, non_parsed, start
         else:
             if len(stop) > 5:
+                print()
                 stop = sorted(stop, key=lambda x: len(x), reverse=True)
                 parsed = parsed + stop[:5]
             return queries, parsed, start
@@ -84,7 +91,6 @@ def search(documents, index_pos, N, k):
     # with open('index.json') as file:
     #     index = json.load(file)
     queries, query, start = input_query()
-    print(query)
     if len(query) == 0:
         print()
         print(f'Found 0 results for {queries}.')
