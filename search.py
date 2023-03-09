@@ -50,22 +50,22 @@ def load_index():
         index_pos = json.load(file)
     return index_pos, N, documents
 
-def get_query_tfidf(query, N, df_dict):
-    query_tfidf = dict()
-    # stemmer = nltk.PorterStemmer()
-    # # query_len = len(query)
-    # query = [stemmer.stem(q) for q in query]
-    parsed = set(query)
-    for p in parsed:
-        freq = 0
-        for q in query:
-            if p == q:
-                freq+=1
-        tf = 1 + math.log(freq, 10)
-        idf = math.log(N/df_dict[p])
-        score = tf*idf
-        query_tfidf[p] = score
-    return query_tfidf
+# def get_query_tfidf(query, N, df_dict):
+#     query_tfidf = dict()
+#     # stemmer = nltk.PorterStemmer()
+#     # # query_len = len(query)
+#     # query = [stemmer.stem(q) for q in query]
+#     parsed = set(query)
+#     for p in parsed:
+#         freq = 0
+#         for q in query:
+#             if p == q:
+#                 freq+=1
+#         tf = 1 + math.log(freq, 10)
+#         idf = math.log(N/df_dict[p])
+#         score = tf*idf
+#         query_tfidf[p] = score
+#     return query_tfidf
 
 def search(documents, index_pos, N, k):
     # file_path = Path('./index.json')
