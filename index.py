@@ -3,16 +3,23 @@ from bs4 import BeautifulSoup
 import nltk
 import os
 import json
-import lxml
 from json import JSONEncoder
-# from reportM1 import report
 from pathlib import Path
 import math
-# debating whether to use this
 import unicodedata
 from urllib.parse import urldefrag
+from typing import List
 
-def build_index(documents):
+def build_index(documents: List[str]):
+    '''
+    takes in a list of document paths and builds an index based on
+    the words found in these documents
+    it goes through the documents in batches to create partial indices 
+    that will be merged with together
+    it also creates two additional files for 
+    document id to url pairs {doc_id: url} and 
+    words to position in the index pairs {word: pos}
+    '''
     # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
     # we get all the paths of the files inside the DEV folder
@@ -30,6 +37,8 @@ def build_index(documents):
             with open(b, 'r', encoding='utf-8', errors='ignore') as f:
                 content = json.load(f)
                 url = urldefrag(content['url'])[0]
+                if url[-1] != '/':
+                    url += '/'
                 if url in urls.values():
                     id-=1
                     continue
@@ -121,12 +130,13 @@ def build_index(documents):
     index_pos()
     return
 
-def get_doc_paths(path):
+def get_doc_paths(path: str) -> List[str]:
     '''
-    get all the documents paths in a folder so it can be accessed later
+    get all the documents paths in a folder and puts it
+    into a list so it can be accessed later during the 
+    building of the index
     '''
     documents = []
-     #for root, _, files in os.walk("DEV/"):
     for root, _, files in os.walk(Path(path)):
         for name in files:
             if name.endswith((".json")): 
@@ -134,24 +144,24 @@ def get_doc_paths(path):
     return documents
 
 # may change it to be implemented during build index
-def doc_url_file(documents):
-    id = 0
-    urls = dict()
-    for doc in documents:
-        id+=1
-        with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
-            content = json.load(f)
-            # urls[id] = content['url']
-            url = urldefrag(content['url'])[0]
-            if url in urls.values():
-                id -=1
-                continue
-            urls[id] = url
+# def doc_url_file(documents):
+#     id = 0
+#     urls = dict()
+#     for doc in documents:
+#         id+=1
+#         with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
+#             content = json.load(f)
+#             # urls[id] = content['url']
+#             url = urldefrag(content['url'])[0]
+#             if url in urls.values():
+#                 id -=1
+#                 continue
+#             urls[id] = url
         
-    with open('doc_url.json', 'w') as file:
-        json.dump(urls, file)
+#     with open('doc_url.json', 'w') as file:
+#         json.dump(urls, file)
 
-def sort_and_tfidf(N): # not sure if correct
+def sort_and_tfidf(N):
     '''
     sorts the keys alphabetically
     sorts the values by doc_id
@@ -179,51 +189,12 @@ def sort_and_tfidf(N): # not sure if correct
         #json.dump(index, file, cls=PostingEncoder)
         file.write(alphabetical)
 
-# def index_pos():
-#     # temp might change
-#     c = '0'
-#     pos = 0
-#     index_pos = dict()
-#     index_pos[c] = 0
-#     with open('index.json') as file:
-#         next_c = chr(ord(c) + 1)
-#         line = ""
-#         while next_c <= 'z':
-#             lines = 1
-#             line = file.readline()
-#             while(line != ""):
-#                 lines += 1
-#                 if line[1:].startswith(next_c):
-#                     index_pos[c] = (index_pos[c], lines-1) # position, num of lines
-#                     index_pos[next_c] = pos
-#                     pos += len(line)
-#                     c = next_c
-#                     if next_c == '9':
-#                         next_c = 'a'
-#                         break
-#                     else:
-#                         next_c = chr(ord(c) + 1)
-#                         break
-#                 else:
-#                     pos += len(line)
-#                 line = file.readline()
-#             if line == "":
-#                 if type(index_pos[c]) != tuple:
-#                     index_pos[c] = (index_pos[c], lines)
-#                 else:
-#                     index_pos[next_c] = (index_pos[next_c], lines)
-#         if line != "":
-#             lines = 1
-#             line = file.readline()
-#             while(line != ""):
-#                 lines += 1
-#                 line = file.readline()
-#             index_pos[c] = (index_pos[c], lines)
-#     with open('index_pos.json', 'w') as file:
-#         json.dump(index_pos, file)
-
 def index_pos():
-    # temp might change
+    '''
+    essentially creates an index of the index file that
+    stores the exact position a word is in the index file
+    so it can be accessed with seek() during retrieval
+    '''
     pos = 0
     index_pos = dict()
     with open('index.json') as file:
