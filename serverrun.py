@@ -15,8 +15,8 @@ def index():
 		#functions inside search.py need to be changed to support a single call
 		nquery = request.form["input"]
 		if nquery :
-			urllist, time = search.search(documents, index_pos, N, 5, nquery)
-			return render_template('base.html', queries = "Displaying results for: " + nquery, urllist = urllist, time = time)
+			urllist, time = search.search(documents, index_pos, 5, nquery)
+			return render_template('base.html', queries = f"Displaying top {len(urllist)} results for: " + nquery, urllist = urllist, time = time)
 		else:
 			return render_template('base.html')
 	else:
