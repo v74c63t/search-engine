@@ -18,6 +18,7 @@
             <p> <input type="submit" value="Search" /> </p>
         </form>
         <p style="font-size:25px;"> {{queries}} </p>
+        <p style="font-size:20px; line-height:50%"> {% if queries %} in {{time}} ms.{% endif %} </p>
     </div>
     <ol style="line-height:200%; font-size:20px;">
         {% for url in urllist %}
