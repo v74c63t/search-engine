@@ -9,9 +9,9 @@ import unicodedata
 from collections import defaultdict
 
 def input_query(HTMLq):
-    if HTMLq == None:
-        queries = input("Please enter your search query \n  >> ")
-    else: queries = HTMLq
+    # if HTMLq == None:
+    #     queries = input("Please enter your search query \n  >> ")
+    queries = HTMLq
     start = time.time()
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     stemmer = nltk.PorterStemmer()
@@ -31,18 +31,18 @@ def input_query(HTMLq):
     # ideas if more than a certain amt of stop words jus remove them sort by len then remove?
     if non_parsed != set():
         if len(parsed)/len(non_parsed) < 0.3:
-            # if len(stop) > 4:
-            #     print()
-            #     stop = sorted(stop, key=lambda x: len(x), reverse=True)
-            #     parsed.update(stop[0:4])
-            #     return queries, parsed, start
-            # else:
+            if len(stop) > 5:
+                print()
+                stop = sorted(stop, key=lambda x: len(x), reverse=True)
+                parsed.update(stop[0:5])
+                return queries, parsed, start
+            else:
                 return queries, non_parsed, start
         else:
-            # if len(stop) > 4:
-            #     print()
-            #     stop = sorted(stop, key=lambda x: len(x), reverse=True)
-            #     parsed.update(stop[:4])
+            if len(stop) > 5:
+                print()
+                stop = sorted(stop, key=lambda x: len(x), reverse=True)
+                parsed.update(stop[:5])
             return queries, parsed, start
     else:
         return queries, non_parsed, start
@@ -59,7 +59,7 @@ def load_index():
     return index_pos, N, documents
 
 # def term_at_time_retr(documents, index_pos, k, query):
-def search(documents, index_pos, k, HTMLq=None):
+def search(documents, index_pos, k, HTMLq):
     queries, query, start = input_query(HTMLq)
     if len(query) == 0:
     # print()
@@ -279,44 +279,44 @@ def search(documents, index_pos, k, HTMLq=None):
 #     return w
 
 # def intersection(l1, l2, N, tfidf=False):
-def compute_intersection(l1, l2):
-    '''
-    finds the intersection between the two lists of postings
-    essentially finds documents that belong on both lists and returns postings 
-    of those with updated tfidf score
-    '''
-    intersection = []
-    # len1 = len(l1)
-    # len2 = len(l2)
-    # l1 = iter(sorted(l1, key=lambda x: x['id'])) # might sort after index is built instead of during query handling
-    # l2 = iter(sorted(l2, key=lambda x: x['id']))
-    if(len(l1) == 0 or len(l2) == 0):
-        return intersection
-    i1 = iter(l1)
-    i2 = iter(l2)
-    p1 = next(i1)
-    p2 = next(i2)
-    while(True):
-        try:
-            if p1['id'] < p2['id']:
-                p1 = next(i1)
-            elif p2['id'] < p1['id']:
-                p2 = next(i2)
-            elif p1['id'] == p2['id']:
-                val = dict()
-                # if tfidf:
-                #     score = tfidf(N, p1, len1) + tfidf(N, p2, len2)
-                # else:
-                #     score = p1['y'] + tfidf(N, p2, len2)
-                score = p1['y'] + p2['y'] #if tfidf is calculated beforehand
-                val['id'] = p1['id']
-                val['y'] = score
-                intersection.append(val)
-                p1 = next(i1)
-                p2 = next(i2)
-        except StopIteration:
-            break
-    return intersection
+# def compute_intersection(l1, l2):
+#     '''
+#     finds the intersection between the two lists of postings
+#     essentially finds documents that belong on both lists and returns postings 
+#     of those with updated tfidf score
+#     '''
+#     intersection = []
+#     # len1 = len(l1)
+#     # len2 = len(l2)
+#     # l1 = iter(sorted(l1, key=lambda x: x['id'])) # might sort after index is built instead of during query handling
+#     # l2 = iter(sorted(l2, key=lambda x: x['id']))
+#     if(len(l1) == 0 or len(l2) == 0):
+#         return intersection
+#     i1 = iter(l1)
+#     i2 = iter(l2)
+#     p1 = next(i1)
+#     p2 = next(i2)
+#     while(True):
+#         try:
+#             if p1['id'] < p2['id']:
+#                 p1 = next(i1)
+#             elif p2['id'] < p1['id']:
+#                 p2 = next(i2)
+#             elif p1['id'] == p2['id']:
+#                 val = dict()
+#                 # if tfidf:
+#                 #     score = tfidf(N, p1, len1) + tfidf(N, p2, len2)
+#                 # else:
+#                 #     score = p1['y'] + tfidf(N, p2, len2)
+#                 score = p1['y'] + p2['y'] #if tfidf is calculated beforehand
+#                 val['id'] = p1['id']
+#                 val['y'] = score
+#                 intersection.append(val)
+#                 p1 = next(i1)
+#                 p2 = next(i2)
+#         except StopIteration:
+#             break
+#     return intersection
 
 # def main():
 #     index_pos, N, documents = load_index()
