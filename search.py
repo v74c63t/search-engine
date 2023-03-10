@@ -318,20 +318,20 @@ def compute_intersection(l1, l2):
             break
     return intersection
 
-def main():
-    index_pos, N, documents = load_index()
-    while(True):
-        user_input = input("Press the enter key to continue or input quit to exit: ")
-        if user_input == 'quit': break
-        print()
-        # search(documents, index_pos, N, 5)
-        get_results(documents, index_pos, 5)
-        # print(input_query())
-        # # user_input = input("Press Enter to continue or input quit() to exit")
-        # print(user_input)
-    # documents.clear()
-    # index_pos.clear()
+# def main():
+#     index_pos, N, documents = load_index()
+#     while(True):
+#         user_input = input("Press the enter key to continue or input quit to exit: ")
+#         if user_input == 'quit': break
+#         print()
+#         # search(documents, index_pos, N, 5)
+#         get_results(documents, index_pos, 5)
+#         # print(input_query())
+#         # # user_input = input("Press Enter to continue or input quit() to exit")
+#         # print(user_input)
+#     # documents.clear()
+#     # index_pos.clear()
 
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
