@@ -22,8 +22,6 @@ def build_index(documents: List[str]):
     '''
     # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
-    # we get all the paths of the files inside the DEV folder
-    # documents = get_doc_paths(path)
     id = 0
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
@@ -36,6 +34,11 @@ def build_index(documents: List[str]):
             id+=1
             with open(b, 'r', encoding='utf-8', errors='ignore') as f:
                 content = json.load(f)
+                # we get rid of the url fragment and check if it we have already seen this url before 
+                # if we have already seen the url before, we skip it because we already tokenized and indexed
+                # the contents of that page so there is no need to do it another time
+                # if we have not seen it before we will store the id with this url inside a dictionary
+                # and continue to tokenize its contents    
                 url = urldefrag(content['url'])[0]
                 if url[-1] != '/':
                     url += '/'
@@ -45,15 +48,16 @@ def build_index(documents: List[str]):
                 urls[id] = url
                 if 'content' in content:
                     content = content['content']
-                    # we get the text content of the file with BeautifulSoup
-                    soup = BeautifulSoup(content, 'html.parser')# get text 
+                    # we get the text content of the file using BeautifulSoup with its html parser
+                    soup = BeautifulSoup(content, 'html.parser')
+                    # we get the text in this way to prevent words from getting stuck together
                     text = soup.get_text(' ')
-                    # we parse the text with nltk
+                    # we parse/tokenize the text using nltk word_tokenize
                     tokens = nltk.tokenize.word_tokenize(text.lower())# parse (nltk)
                     for t in tokens:
-                        # debating whether to use this
-                        #norm = unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode()
-                        # we port stem the word before it is added to the index
+                        # before adding the word to the index, we must first get rid of any unicode characters still
+                        # in the word and replace it with its ascii counterpart if possible and then we stem the word
+                        # using nltk PorterStemmer   
                         stemmer = nltk.PorterStemmer()
                         stem = stemmer.stem(unicodedata.normalize('NFKD', t).encode('ascii', errors='ignore').decode())#port stem(t) (look at nltk)
                         # as long as the word is alphanumeric it is added to the index
@@ -69,12 +73,11 @@ def build_index(documents: List[str]):
                                 # if there is a value associated with the word and the previous posting is not for this
                                 # document, we just append a new posting for the document at the end of the list 
                                 index[stem].append(Posting(id))
-                    # check for importance
-                    # find all words with important tags and add weights to them
-                    # first find all text with certain tags
-                    # then tokenize the text in those tags
-                    # and find it in index to add weights to self.f
-                    # importance: title > h1 > h2 = h3 > strong = b
+                    # to check for important words, we find all words with these important tags and add weights to them 
+                    # we find all words with these tags: <title>, <h1>, <h2>, <h3>, <strong>, <b>
+                    # we tokenize the text in between these tags and put it in a set to remove duplicates
+                    # we then assign weights to each of the words based on the tags they appear in   
+                    # importance: title > h1 > h2 = h3 = strong = b
                     importance = set(stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode()) 
                                      for title in soup.find_all('title') 
                                      for word in nltk.tokenize.word_tokenize(title.get_text(' ').strip().lower()) if word.isalnum() and word != "") 
@@ -113,20 +116,25 @@ def build_index(documents: List[str]):
             with open('index.json') as file:
                 data = json.load(file)
             # we merge the index by adding the values together if the keys are the same
+            # if the key does not already exist in the index, a new key-value pair would be created   
             for k, v in index.items():
                 try:
                     data[k] += v
                 except(KeyError):
                     data[k] = v
+            # we then dump the index back into the index file while also using a JSONEncoder so
+            # the posting class can be properly dumped into the file   
             with open('index.json', 'w') as file:
                 json.dump(data, file, cls=PostingEncoder)
         # we empty out the index before continuing onto the next batch of documents
         index.clear()
     with open('doc_url.json', 'w') as file:
         json.dump(urls, file)
-    #report(id)
+    # we reformat and sort the index in alphabetical order and update each tf-idf score 
     sort_and_tfidf(len(urls.keys()))
     urls.clear()
+    # we then calculate the position of each word in the index file and essentially create 
+    # an index of the index 
     index_pos()
     return
 
@@ -143,50 +151,33 @@ def get_doc_paths(path: str) -> List[str]:
                 documents.append(root+'/'+name)
     return documents
 
-# may change it to be implemented during build index
-# def doc_url_file(documents):
-#     id = 0
-#     urls = dict()
-#     for doc in documents:
-#         id+=1
-#         with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
-#             content = json.load(f)
-#             # urls[id] = content['url']
-#             url = urldefrag(content['url'])[0]
-#             if url in urls.values():
-#                 id -=1
-#                 continue
-#             urls[id] = url
-        
-#     with open('doc_url.json', 'w') as file:
-#         json.dump(urls, file)
-
-def sort_and_tfidf(N):
+def sort_and_tfidf(N: int):
     '''
-    sorts the keys alphabetically
-    sorts the values by doc_id
-    calculates the tfidf for each term-doc pair
-    writes each term-list of postings pair to a newline
+    this sorts the index alphabetically and calculates the tf-idf score
+    for each term-document pair (extra weights are given to important words)
+    it then writes it back to the index file and put each term-list of postings pair 
+    onto a newline so it can be retrieved easily later
     '''
     with open('index.json') as file:
         index = json.load(file)
     for _, v in index.items():
         v_len = len(v)
         for p in v:
+            # we go through each posting and update 'y' to be the 
+            # tf-idf value for that document 
             tf = 1 + math.log(p["y"], 10)
             idf = math.log((N/v_len), 10)
             w = tf * idf
             if p["f"] != 0:
-                #not sure yet
+                # if the 'f' field is not equal to 0, this word is considered important
+                # and has a weight associated with it for appearing in certain tags
+                # because of that, this weight is multiplied to the tf-idf score
                 w *= p['f']
             p['y'] = w 
-        # # sort by tfidf
-        # index[k] = sorted(v, key=lambda x: x['y'], reverse=True)
-        # index[k] = sorted(v, key=lambda x: x['id']) # sort by doc_id
     with open('index.json', 'w') as file:
-        alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n') # sort alphabetically/puts each key-val pair on new line
+        # this index is then sort alphabetically and each key-val pair is put on a new line
+        alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n')
         index.clear()
-        #json.dump(index, file, cls=PostingEncoder)
         file.write(alphabetical)
 
 def index_pos():
@@ -198,6 +189,10 @@ def index_pos():
     pos = 0
     index_pos = dict()
     with open('index.json') as file:
+        # we read the index file until there are no more lines 
+        # left in order to store with each word the exact position
+        # it appears in in the index file
+        # we use len() to calculate the position 
         line = file.readline()
         if line != "":
             i = line.find('":')
@@ -217,18 +212,20 @@ def index_pos():
 
 
 class Posting():
-    # the posting class contain the document id and the frequency count of the word in that document
+    # self.id is basically the document id
+    # self.y is the score of the document
+    # self.f is used to keep track of the weight of the document 
+    # if the word appeared to be important 
     def __init__(self, doc_id):
         self.id = doc_id
-        self.y = 1 # term freq / will turn into tfidf later
-        # self.f = defaultdict(int) not sure yet will prob give title, h, strong weights depends 3,2,1?
+        self.y = 1 
         self.f = 0 
     def add_count(self):
         self.y+=1
     def get_doc_id(self): 
         return self.id
     def importance(self, field):
-        #not sure yet
+        # importance: title > h1 > h2 = h3 = strong = b
         if field == 'title':
             self.f += 5
         elif field == 'h1':
@@ -237,7 +234,6 @@ class Posting():
             self.f += 3
         elif field == 'h3/strong/b':
             self.f += 2
-    # or just add count
 
 # this class ensures that a Posting class object can be dumped into a json file
 class PostingEncoder(JSONEncoder):
@@ -247,7 +243,3 @@ class PostingEncoder(JSONEncoder):
 
 if __name__ == "__main__":
     build_index(get_doc_paths('./DEV'))
-#     index_pos()
-    # build_index(get_doc_paths('./DEV'))
-    # doc_url_file(get_doc_paths('./DEV'))
-    # sort_and_tfidf(53792)
