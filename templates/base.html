@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ZOT Query</title>
+    <style>
+        div.container {
+            padding-top: 200px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body style="font-family: 'Segoe UI'">
+    <div class=container>
+        <p style="font-size:60px;"> ZOT Query </p>
+
+        <form action="#" method="post">
+            <p> <input type="text" name="input" placeholder="Enter query here" /> </p>
+            <p> <input type="submit" value="Search" /> </p>
+        </form>
+        <p style="font-size:25px;"> {{queries}} </p>
+    </div>
+    <ol style="line-height:200%; font-size:20px;">
+        {% for url in urllist %}
+        <li>{{url}}</li>
+        {% endfor %}
+    </ol>
+</body>
+</html>
