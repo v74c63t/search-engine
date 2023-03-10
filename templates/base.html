@@ -10,17 +10,17 @@
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.4.0/css/bootstrap.min.css" integrity="sha256-/ykJw/wDxMa0AQhHDYfuMEwVb4JHMx9h4jD4XvHqVzU=" crossorigin="anonymous" />
 </head>
-<body style="font-family: 'Segoe UI'">
+<body style="background-color: darkslategray; font-family: 'Segoe UI'">
     <a class="btn btn-light btn-outline-secondary" style="margin-left: 10px; margin-top: 10px; color:black" href="/">Home</a>
     <div class=container>
-        <h1 style="font-size:60px;"> <strong><em>ZOT Query</em></strong> </h1>
+        <h1 style="font-size:60px; color:beige"> <strong><em>ZOT Query</em></strong> </h1>
         <br>
         <form action="#" method="post">
             <p> <input type="text" name="input" placeholder="Enter Query Here" /> </p>
             <p> <input type="submit" value="Search" /> </p>
         </form>
-        <p style="font-size:25px;"> {{queries}} </p>
-        <p style="font-size:20px; line-height:50%"> {% if queries %} in <em>{{time}}</em> ms.{% endif %} </p>
+        <p style="font-size:25px;color:beige"> {{queries}} </p>
+        <p style="font-size:20px; line-height:50%;color:beige"> {% if queries %} in <em>{{time}}</em> ms.{% endif %} </p>
     </div>
     <br>
     <ol style="line-height:200%; font-size:20px;">
