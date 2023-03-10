@@ -13,18 +13,19 @@
 <body style="font-family: 'Segoe UI'">
     <a class="btn btn-light btn-outline-secondary" style="margin-left: 10px; margin-top: 10px; color:black" href="/">Home</a>
     <div class=container>
-        <p style="font-size:60px;"> ZOT Query </p>
-
+        <h1 style="font-size:60px;"> <strong><em>ZOT Query</em></strong> </h1>
+        <br>
         <form action="#" method="post">
             <p> <input type="text" name="input" placeholder="Enter Query Here" /> </p>
             <p> <input type="submit" value="Search" /> </p>
         </form>
         <p style="font-size:25px;"> {{queries}} </p>
-        <p style="font-size:20px; line-height:50%"> {% if queries %} in {{time}} ms.{% endif %} </p>
+        <p style="font-size:20px; line-height:50%"> {% if queries %} in <em>{{time}}</em> ms.{% endif %} </p>
     </div>
+    <br>
     <ol style="line-height:200%; font-size:20px;">
-        {% for url in urllist %}
-        <li><a href="{{url}}">{{url}}</a></li>
+        {% for i in range(urllist|length) %}
+        <li class="list-group-item list-group-item-dark" style="margin-right: 40px"><a href="{{urllist[i]}}">{{i+1}}. {{urllist[i]}}</a></li>
         {% endfor %}
     </ol>
 </body>
