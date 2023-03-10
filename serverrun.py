@@ -12,11 +12,10 @@ index_pos, N, documents = search.load_index()
 @app.route("/", methods=['POST', 'GET'])
 def index():
 	if request.method == "POST":
-		#functions inside search.py need to be changed to support a single call
 		nquery = request.form["input"]
 		if nquery :
 			urllist, time = search.search(documents, index_pos, 5, nquery)
-			return render_template('base.html', queries = f"Displaying top {len(urllist)} results for: \"" + nquery+ "\"", urllist = urllist, time = time)
+			return render_template('base.html', queries = f"Displaying Top {len(urllist)} Results for: \"" + nquery+ "\"", urllist = urllist, time = time)
 		else:
 			return render_template('base.html')
 	else:
