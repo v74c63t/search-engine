@@ -6,7 +6,7 @@ app = Flask(__name__)
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 
-index_pos, N, documents = search.load_index()
+index_pos, documents = search.load_index()
 
 #the web gui only has one page, and it automatically creates a numbered list upon the urllist var being filled.
 @app.route("/", methods=['POST', 'GET'])
