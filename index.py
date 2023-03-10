@@ -118,6 +118,7 @@ def build_index(documents):
     #report(id)
     sort_and_tfidf(len(urls.keys()))
     urls.clear()
+    index_pos()
     return
 
 def get_doc_paths(path):
