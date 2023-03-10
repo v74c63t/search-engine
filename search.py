@@ -9,8 +9,6 @@ import unicodedata
 from collections import defaultdict
 
 def input_query(HTMLq):
-    # if HTMLq == None:
-    #     queries = input("Please enter your search query \n  >> ")
     queries = HTMLq
     start = time.time()
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
@@ -28,7 +26,6 @@ def input_query(HTMLq):
             else:
                 parsed.add(stem)
                 non_parsed.add(stem)
-    # ideas if more than a certain amt of stop words jus remove them sort by len then remove?
     if non_parsed != set():
         if len(parsed)/len(non_parsed) < 0.3:
             if len(stop) > 5:
@@ -42,7 +39,7 @@ def input_query(HTMLq):
             if len(stop) > 5:
                 print()
                 stop = sorted(stop, key=lambda x: len(x), reverse=True)
-                parsed.update(stop[:5])
+                parsed.update(stop[0:5])
             return queries, parsed, start
     else:
         return queries, non_parsed, start
@@ -69,7 +66,7 @@ def search(documents, index_pos, k, HTMLq):
         ntime = (time.time()-start)* 10**3
         print()
         return [], ntime
-    query = sorted(query)
+    # query = sorted(query)
     # print(query)
     score = defaultdict(int)
     posting_lists = []
