@@ -2,12 +2,11 @@
 from pathlib import Path
 import nltk
 import json
-# import math
 from queue import PriorityQueue
-# from index import build_index, sort_and_tfidf, get_doc_paths
-# from urllib.parse import urldefrag
 import time
 from nltk.corpus import stopwords
+import unicodedata
+from collections import defaultdict
 
 def input_query():
     queries = input("Please enter your search query \n  >> ")
@@ -15,32 +14,33 @@ def input_query():
     words = nltk.tokenize.word_tokenize(queries.lower()) # parse terms into separate queries
     stemmer = nltk.PorterStemmer()
     stops = set(stopwords.words('english'))
-    stop = []
-    non_parsed = []
-    parsed = []
+    stop = set()
+    non_parsed = set()
+    parsed = set()
     for word in words:
         if word.isalnum():
+            stem = stemmer.stem(unicodedata.normalize('NFKD', word).encode('ascii', errors='ignore').decode())
             if word in stops:
-                non_parsed.append(stemmer.stem(word))
-                stop.append(word)
+                non_parsed.add(stem)
+                stop.add(stem)
             else:
-                parsed.append(stemmer.stem(word))
-                non_parsed.append(parsed[-1])
+                parsed.add(stem)
+                non_parsed.add(stem)
     # ideas if more than a certain amt of stop words jus remove them sort by len then remove?
-    if non_parsed != []:
-        if len(parsed)/len(non_parsed) < 0.5:
-            if len(stop) > 5:
-                print()
-                stop = sorted(stop, key=lambda x: len(x), reverse=True)
-                parsed = parsed + stop[:5]
-                return queries, parsed, start
-            else:
+    if non_parsed != set():
+        if len(parsed)/len(non_parsed) < 0.3:
+            # if len(stop) > 4:
+            #     print()
+            #     stop = sorted(stop, key=lambda x: len(x), reverse=True)
+            #     parsed.update(stop[0:4])
+            #     return queries, parsed, start
+            # else:
                 return queries, non_parsed, start
         else:
-            if len(stop) > 5:
-                print()
-                stop = sorted(stop, key=lambda x: len(x), reverse=True)
-                parsed = parsed + stop[:5]
+            # if len(stop) > 4:
+            #     print()
+            #     stop = sorted(stop, key=lambda x: len(x), reverse=True)
+            #     parsed.update(stop[:4])
             return queries, parsed, start
     else:
         return queries, non_parsed, start
@@ -49,62 +49,28 @@ def input_query():
     # return queries, [stemmer.stem(word) for word in words if word.isalnum()], start
 
 def load_index():
-    # file_path = Path('./index.json')
     with open('doc_url.json', 'r') as file:
         documents = json.load(file) 
     N = len(documents.keys()) 
-    # if not Path.is_file(file_path):
-    #     build_index(documents)
-    #     #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
-    #     sort_and_tfidf(N)
-    # with open('index.json') as file:
-    #     index = json.load(file)
     with open('index_pos.json') as file:
         index_pos = json.load(file)
     return index_pos, N, documents
 
-# def get_query_tfidf(query, N, df_dict):
-#     query_tfidf = dict()
-#     # stemmer = nltk.PorterStemmer()
-#     # # query_len = len(query)
-#     # query = [stemmer.stem(q) for q in query]
-#     parsed = set(query)
-#     for p in parsed:
-#         freq = 0
-#         for q in query:
-#             if p == q:
-#                 freq+=1
-#         tf = 1 + math.log(freq, 10)
-#         idf = math.log(N/df_dict[p])
-#         score = tf*idf
-#         query_tfidf[p] = score
-#     return query_tfidf
-
-def search(documents, index_pos, N, k):
-    # file_path = Path('./index.json')
-    # documents = get_doc_paths(path)  
-    # N = len(documents) 
-    # if not Path.is_file(file_path):
-    #     build_index(documents)
-    #     #index.tfidf(len(documents)) might calculate it for all tokens beforehand instead of during query handling
-    #     sort_and_tfidf(N)
-    # with open('index.json') as file:
-    #     index = json.load(file)
-    queries, query, start = input_query()
+# def term_at_time_retr(documents, index_pos, k, query):
+def search(documents, index_pos, k, query):
     if len(query) == 0:
-        print()
-        print(f'Found 0 results for {queries}.')
-        print((time.time()-start)* 10**3, 'ms')
-        print() 
-        return
-    # original = query
-    query = set(query)
-    #queries = []
-    # stemmer = nltk.PorterStemmer()
-    postings = PriorityQueue()
+    # print()
+    # print(f'Found 0 results for {queries}.')
+    # print((time.time()-start)* 10**3, 'ms')
+    # print() 
+        return []
+    query = sorted(query)
+    # print(query)
+    score = defaultdict(int)
+    posting_lists = []
+    rank = PriorityQueue()
     try:
-        # df=dict()
-        # i = 0
+        # if p == None:
         with open('index.json') as file:
             for q in query:
                 try:
@@ -119,57 +85,88 @@ def search(documents, index_pos, N, k):
                     if index[0] != '{':
                         index = '{' + index
                     index = json.loads(index)
-                    p = index[q]
-                    q_len = len(p)
-                    postings.put((q_len, p))
+                    # posting = index[q]
+                    # q_len = len(posting)
+                    # postings.put((q_len, posting))
+                    posting_lists.append(index[q])
                     index.clear()
                 except(KeyError):
                     continue
-        # for q in query:
-        # while i < len(query):
-        #     q = query[i]
-        #     #queries.append(stemmer.stem(q))
-        #     # put posting list and length into priority queue so smaller lists will be checked first
-        #     pos, lines = index_pos[q[0]]
-        #     with open('index.json') as file:
-        #         file.seek(pos)
-        #         index = ""
-        #         for _ in range(lines):
-        #             index += file.readline()
-        #         index = index[:-3]
-        #         if index[-1] != ']':
-        #             index += '}]}'
-        #         else:
-        #             index += '}'
-        #         if index[0] != '{':
-        #             index = '{' + index
-        #     index = json.loads(index)
-        #     while True:    
-        #         p = index[q]
-        #         q_len = len(p)
-        #         postings.put((q_len, p))
-        #         # df[q] = q_len
-        #         i += 1
-        #         if i < len(query):
-        #             if query[i][0] != query[i-1][0]:
-        #                 break
-        #         else:
-        #             break
-        #     index.clear()
-        # query_tfidf = get_query_tfidf(original, N, df)
-        # df.clear()
-            #print(len(index[stemmer.stem(q)]))
-        # tfidf = True
-        # if postings.qsize == 1:
-        #     p = postings.get()
-        #     for i in p:
-        #         w = tfidf(N, i, len(p))
-        #         i['y'] = w
-        #     postings.put(len(p), p)
+        # else:
+        #     for posting in p:
+        #         postings.put((len(posting),p))
+        if len(posting_lists) == 0:
+            # print()
+            # print(f'Found 0 results for {queries}.')
+            # print((time.time()-start)* 10**3, 'ms')
+            # print() 
+            return []
+        for posting_list in posting_lists:
+            for posting in posting_list:
+                score[posting['id']] += posting['y']
+        for id, y in score.items():
+            rank.put((-y, id))
+        results = []
+        for _ in range(k):
+            id = rank.get()[1]
+            results.append(documents[str(id)])
+            if rank.empty():
+                break
+        return results
+    except(KeyError):
+        # print()
+        # print(f'Found 0 results for {queries}.')
+        # print((time.time()-start)* 10**3, 'ms')
+        # print()
+        return []
+
+# def search(documents, index_pos, N, k):
+# def search(documents, index_pos, k, p=None, query=None):
+def old_search(documents, index_pos, k, query):
+    # queries, query, start = input_query()
+    # if query != None:
+    if len(query) == 0:
+        # print()
+        # print(f'Found 0 results for {queries}.')
+        # print((time.time()-start)* 10**3, 'ms')
+        # print() 
+        return []
+    query = set(query)
+    postings = PriorityQueue()
+    try:
+        # if p == None:
+        with open('index.json') as file:
+            for q in query:
+                try:
+                    pos = index_pos[q]
+                    file.seek(pos)
+                    index = file.readline()
+                    index = index[:-3]
+                    if index[-1] != ']':
+                        index += '}]}'
+                    else:
+                        index += '}'
+                    if index[0] != '{':
+                        index = '{' + index
+                    index = json.loads(index)
+                    posting = index[q]
+                    q_len = len(posting)
+                    postings.put((q_len, posting))
+                    index.clear()
+                except(KeyError):
+                    continue
+        # else:
+        #     for posting in p:
+        #         postings.put((len(posting),p))
+        if postings.qsize() == 0:
+            # print()
+            # print(f'Found 0 results for {queries}.')
+            # print((time.time()-start)* 10**3, 'ms')
+            # print() 
+            return []
         #more  than one word in query
         while(postings.qsize() > 1):
             l1 = postings.get()[1]
-            # print(l1)
             l2 = postings.get()[1]
             # intersection = intersection(l1, l2, N, tfidf)
             # get intersection of all words in query (the documents that contain all the words in query)
@@ -182,11 +179,11 @@ def search(documents, index_pos, N, k):
         size = final[0]
         if size == 0:
             # no interesection/no document that contains all words
-            print()
-            print(f'Found 0 results for {queries}.')
-            print((time.time()-start)* 10**3, 'ms')
-            print()
-            return
+            # print()
+            # print(f'Found 0 results for {queries}.')
+            # print((time.time()-start)* 10**3, 'ms')
+            # print()
+            return []
         final = final[1]
         #print(final)
         for d in final:
@@ -194,48 +191,72 @@ def search(documents, index_pos, N, k):
             # have to use -score so the highest score will be popped first
             ids.put((-d['y'], d['id']))
         # get top k results
-        total_results = ids.qsize()
+        # total_results = ids.qsize()
         results = []
         for _ in range(k):
             id = ids.get()[1]
-            # while(True):
-            #     # make sure no fragements/duplicates
-            #     # url = get_doc_url(documents, id)
-            #     url = documents[str(id)]
-            #     if urldefrag(url)[1] != "":
-            #         url = urldefrag(url)[0]
-            #         if url in results:
-            #             if ids.empty():
-            #                 break
-            #             id = ids.get()[1]
-            #         else:
-            #             results.append(url)
-            #             break
-            #     else:
-            #         if url in results:
-            #             if ids.empty():
-            #                 break
-            #             id = ids.get()[1]
-            #         else:
-            #             results.append(url)
-            #             break
             results.append(documents[str(id)])
-            # results.append(get_doc_url(documents, id))
             if ids.empty():
                 break
-        print()
-        print(f'Found {total_results} results for {queries}. Returning top {len(results)} results...')
-        for url in results:
-            print(url)
-        print((time.time()-start)* 10**3, 'ms')
-        print()
-        return
+        # print()
+        # print(f'Found {total_results} results for {queries}. Returning top {len(results)} results...')
+        # for url in results:
+        #     print(url)
+        # print((time.time()-start)* 10**3, 'ms')
+        # print()
+        return results
     except(KeyError):
-        print()
-        print(f'Found 0 results for {queries}.')
-        print((time.time()-start)* 10**3, 'ms')
-        print()
-        return
+        # print()
+        # print(f'Found 0 results for {queries}.')
+        # print((time.time()-start)* 10**3, 'ms')
+        # print()
+        return []
+
+def get_results(documents, index_pos, k):
+    queries, query, start = input_query()
+    # results = old_search(documents, index_pos, k, query)
+    results = search(documents, index_pos, k, query)
+    # i = len(query)-1
+    # # sort = []
+    # if len(results) < k:   
+    #     p_len = dict()
+    #     with open('index.json') as file:
+    #         for q in query:
+    #             try:
+    #                 pos = index_pos[q]
+    #                 file.seek(pos)
+    #                 index = file.readline()
+    #                 index = index[:-3]
+    #                 if index[-1] != ']':
+    #                     index += '}]}'
+    #                 else:
+    #                     index += '}'
+    #                 if index[0] != '{':
+    #                     index = '{' + index
+    #                 index = json.loads(index)
+    #                 p_len[q] = len(index[q])
+    #                 # print(type(index[q]), len(index[q]))
+    #                 # postings.append(index[q])
+    #                 # print(len(postings))
+    #                 index.clear()
+    #             except(KeyError):
+    #                 continue
+    #     sort = sorted(query, key=lambda x: p_len[x], reverse=True)
+    #     # print(len(sort))
+    #     while len(results) < k or i >= 0:
+    #         parse = sort[:i]
+    #         if i < len(sort)-1:
+    #             parse += sort[i+1:]
+    #         results += search(documents, index_pos, k-len(results), parse)
+    #         i -= 1
+    print()
+    print(f'For query: {queries} returning top {len(results)} results...')
+    end = (time.time() - start) * 10**3
+    for url in results:
+        print(url)
+    print((time.time()-start)* 10**3, 'ms')
+    print(end, 'ms')
+    print()
 
 
 # def tfidf(N, p, v_len): # not sure if correct
@@ -257,6 +278,8 @@ def compute_intersection(l1, l2):
     # len2 = len(l2)
     # l1 = iter(sorted(l1, key=lambda x: x['id'])) # might sort after index is built instead of during query handling
     # l2 = iter(sorted(l2, key=lambda x: x['id']))
+    if(len(l1) == 0 or len(l2) == 0):
+        return intersection
     i1 = iter(l1)
     i2 = iter(l2)
     p1 = next(i1)
@@ -283,33 +306,19 @@ def compute_intersection(l1, l2):
             break
     return intersection
 
-# def cosine(q, d):
-#     return
-
-# def get_doc_url(documents, id):
-#     '''
-#     gets the doc url from a list of document paths given a document id
-#     '''
-#     i = id - 1 # because id starts at 1
-#     doc = documents[i]
-#     with open(doc, 'r', encoding='utf-8', errors='ignore') as f:
-#         content = json.load(f)
-#         if 'url' in content:
-#             return content['url']
-#     return ''
-
 def main():
     index_pos, N, documents = load_index()
     while(True):
         user_input = input("Press the enter key to continue or input quit to exit: ")
         if user_input == 'quit': break
         print()
-        search(documents, index_pos, N, 5)
+        # search(documents, index_pos, N, 5)
+        get_results(documents, index_pos, 5)
         # print(input_query())
         # # user_input = input("Press Enter to continue or input quit() to exit")
         # print(user_input)
-    documents.clear()
-    index_pos.clear()
+    # documents.clear()
+    # index_pos.clear()
 
 
 if __name__ == "__main__":
