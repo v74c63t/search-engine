@@ -16,7 +16,7 @@ def index():
 		nquery = request.form["input"]
 		if nquery :
 			urllist, time = search.search(documents, index_pos, 5, nquery)
-			return render_template('base.html', queries = f"Displaying top {len(urllist)} results for: " + nquery, urllist = urllist, time = time)
+			return render_template('base.html', queries = f"Displaying top {len(urllist)} results for: \"" + nquery+ "\"", urllist = urllist, time = time)
 		else:
 			return render_template('base.html')
 	else:
