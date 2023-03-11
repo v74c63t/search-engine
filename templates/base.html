@@ -23,9 +23,9 @@
         <p style="font-size:20px; line-height:50%;color:beige"> {% if queries %} in <em>{{time}}</em> ms.{% endif %} </p>
     </div>
     <br>
-    <div style="line-height:200%; font-size:20px;">
+    <div style="line-height:200%; font-size:20px; margin-bottom: 20px;">
         {% for i in range(urllist|length) %}
-        <li class="list-group-item list-group-item-light" style="margin-left: 40px; margin-right: 40px">
+        <li class="list-group-item list-group-item-light" style="margin-left: 40px; margin-right: 40px;">
             {{i+1}}.<a href="{{urllist[i]}}"> {{urllist[i]}}</a>
         </li>
         {% endfor %}
