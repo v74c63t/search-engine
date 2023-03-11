@@ -7,6 +7,7 @@ appear in the first few queries that mention the problem)
     fixes:
         - we disregarded stop words in queries if they were less than 70% of the query
         - we added weights to important words (if they appeared in the title, header, or is bolded) so their tf-idf score will be higher
+        - the weights are multiplied to the tf-idf score when it is calculated so it ranks higher in the results
 2. software engineering machine learning artificial intelligence
     problem:
         - took a long time to run
@@ -86,9 +87,17 @@ appear in the first few queries that mention the problem)
         - lots of stop words
     fixes:
         - stop word processing/ignore duplicates
-15. data science
-16. alex thornton
-17. becoming an ics tutor
+15. alex thornton
+    problem:
+        - search results were not ranked properly
+    fixes:
+        - added important word weights
+16. becoming an ics tutor
+    problem:
+        - multiterm query so slow response time and there is a stop word in the query
+    fixes:
+        - stop word processing, index of index file for  O(1) seek
+17. data science
 18. air force
 19. computer science
 20. faculty
