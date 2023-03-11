@@ -1,0 +1,87 @@
+(Note: A lot of the test queries have similar problems, a more elaborative description of the fixes for that problem
+appear in the first query that mentions the problem)
+1. master of software engineering
+    problems:
+        - took a long time to run because of stop word
+        - results returned were not that relevant
+    fixes:
+        - we disregarded stop words in queries if they were less than 70% of the query
+        - we added weights to important words (if they appeared in the title, header, or is bolded) so their tf-idf score will be higher
+2. software engineering machine learning artificial intelligence
+    problem:
+        - took a long time to run
+    fixes: 
+        - changed how index is accessed during retrieval
+        - first tried creating the index of the index by having a file that points to where each alphabet started at in the index file
+        so for example, words starting with 'a' is at position # and words starting with 'b' starts at position #, but it still too slow
+        - in the end just directly saved the position of each word in the index file into a dictionary and loaded it into index_pos.json 
+        so it can be accessed in retrieval using seek() making it only take O(1) time to get postings for words
+3. cristina lopes
+    problems:
+        - the search results were not that relevant
+    fixes:
+        - weights for important words when building index
+4. acm: 
+    problems:
+        - search results could have been better
+    fixes:
+        - multiplied the tf-idf score by a multiplier if a word is important so it ranks higher in the results
+5. machine learning:
+    problem:
+        - search results
+    fixes:
+        - important words weights
+6. the be to of and a in that have i
+    problem:
+        - takes a very long time to run because the query solely consists of stop words which generally appear in a lot of documents
+    solutions:
+        - did some stop word processing
+        - we essentially ignore stop words after a certain threshold
+        - we will only consider up to 5 stop words in a query if more than 70% of the query consists of stop words
+        - we will only take the 5 longest stop words because shorter stop words tend to appear much more often and contribute the latest
+7. the and then of in an and when where
+    problem:
+        - takes a long time to run
+    fixes: 
+        - stop word processing
+        - ignore duplicates when taking in/parsing query
+8. master of software engineering thorntown
+    problem:
+        - did not return top 5 results because there were less than 5 documents that contain all these words
+    fixes:
+        - changed how results are obtained (changed from boolean AND only retrieval to general rank retrieval)
+        - all documents that contain at least one word in the query is now considered to be chosen for top 5 results
+        - changed from only looking at intersections to term at a time retrieval
+9. a b c d e f g h i j k l m n o p q r s t u v w x y z
+    problem: 
+        - long time to run because of many words in query
+    fixes: 
+        - made an index of index file that stores the exact position a word appears in the index file
+
+
+
+master of software engineering (added weights removed stop words if less than 50% of the query)
+acm (added weights)
+machine learning (added weights)
+faculty
+cristina lopes (added weights)
+the and then of in an and when where (changed how index of index is constructed)
+the be to of and a in that have i
+bdm
+to be or not to be
+air force
+homework
+draft
+the be to of and a in that have i software engineering
+spring project
+software engineering machine learning artificial intelligence
+computer science
+data science
+alex thornton
+becoming an ics lab tutor
+master of software engineering and where a
+master of software engineering thorntown
+engg enghalskrug energi engestrom
+the be to of and a in that have i thorntown
+a b c d e f g h i j k l m n o p q r s t u v w x y z
+have that and be in of to a i
