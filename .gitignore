@@ -357,26 +357,10 @@ ANALYST/
 
 index.json
 
-old.json
-
-old2.json
-
-test.json
-
-index_unsorted.json
+index_pos.json
 
 doc_url.json
 
 query.txt
 
-index_pos_old.json
-index_pos.json
-index_unweighted.json
-doc_url_old.json
-test2.txt
-doc_url_wrong.json
-index_wrong.json
-index copy.json
-index copy 2.json
-index_wr_format.json
-index_pos_alpha.json
+/old
