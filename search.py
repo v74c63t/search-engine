@@ -7,6 +7,7 @@ import time
 from nltk.corpus import stopwords
 import unicodedata
 from collections import defaultdict
+# from typing import Tuple
 
 def input_query(HTMLq):
     '''
@@ -81,12 +82,15 @@ def search(documents, index_pos, k, HTMLq):
     this is essentially term at a time retrieval
     it gets all the postings for each word from the index file
     and returns the top k results based on their weight score
+    and the time it took for the query response
 
     documents: the dictionary that maps document ids to document urls
     index_pos: the dictionary that maps words to their position in the index file
     k: the top number of urls to be returned
     HTMLq: the query obtained from the input field of the gui
 
+    results: list top k of urls
+    ntime: the time the query response took
     '''
     query, start = input_query(HTMLq)
     if len(query) == 0:

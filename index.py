@@ -8,17 +8,18 @@ from pathlib import Path
 import math
 import unicodedata
 from urllib.parse import urldefrag
-from typing import List
 
-def build_index(documents: List[str]):
+def build_index(documents):
     '''
-    takes in a list of document paths and builds an index based on
+    takes in a list of documents and builds an index based on
     the words found in these documents
     it goes through the documents in batches to create partial indices 
     that will be merged with together
     it also creates two additional files for 
     document id to url pairs {doc_id: url} and 
     words to position in the index pairs {word: pos}
+
+    documents: a list of document paths obtained from get_doc_paths()
     '''
     # index is a defaultdict with keys of strings and values of Posting lists 
     index = defaultdict(list)
@@ -138,11 +139,14 @@ def build_index(documents: List[str]):
     index_pos()
     return
 
-def get_doc_paths(path: str) -> List[str]:
+def get_doc_paths(path):
     '''
     get all the documents paths in a folder and puts it
     into a list so it can be accessed later during the 
     building of the index
+
+    path: the path to the folder containing all the documents
+    documents: a list of all the document paths
     '''
     documents = []
     for root, _, files in os.walk(Path(path)):
@@ -151,16 +155,20 @@ def get_doc_paths(path: str) -> List[str]:
                 documents.append(root+'/'+name)
     return documents
 
-def sort_and_tfidf(N: int):
+def sort_and_tfidf(N):
     '''
     this sorts the index alphabetically and calculates the tf-idf score
     for each term-document pair (extra weights are given to important words)
     it then writes it back to the index file and put each term-list of postings pair 
     onto a newline so it can be retrieved easily later
+
+    N: the total number of documents
     '''
     with open('index.json') as file:
         index = json.load(file)
-        index.pop("")
+        # this is to prevent empty keys
+        try:index.pop("")
+        except(KeyError): pass
     for _, v in index.items():
         v_len = len(v)
         for p in v:
@@ -175,6 +183,7 @@ def sort_and_tfidf(N: int):
                 # because of that, this weight is multiplied to the tf-idf score
                 w *= p['f']
             p['y'] = w 
+    # this is to prevent empty values
     to_be_popped = []
     for k, v in index.items():
         if v == []:
@@ -182,7 +191,7 @@ def sort_and_tfidf(N: int):
     for k in to_be_popped:
         index.pop(k)
     with open('index.json', 'w') as file:
-        # this index is then sort alphabetically and each key-val pair is put on a new line
+        # the index is then sort alphabetically and each key-val pair is put on a new line
         alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n')
         index.clear()
         file.write(alphabetical)
@@ -228,11 +237,14 @@ class Posting():
         self.y = 1 
         self.f = 0 
     def add_count(self):
+        # used to add frequency count
         self.y+=1
     def get_doc_id(self): 
         return self.id
     def importance(self, field):
         # importance: title > h1 > h2 = h3 = strong = b
+        # depending on the tag the word is found in, it will have
+        # a different multiplier that will change its tf-idf score
         if field == 'title':
             self.f += 5
         elif field == 'h1':
