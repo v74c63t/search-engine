@@ -1,5 +1,4 @@
 
-from pathlib import Path
 import nltk
 import json
 from queue import PriorityQueue
@@ -7,7 +6,6 @@ import time
 from nltk.corpus import stopwords
 import unicodedata
 from collections import defaultdict
-# from typing import Tuple
 
 def input_query(HTMLq):
     '''
