@@ -1,8 +1,8 @@
 (Note: A lot of the test queries have similar problems, a more elaborative description of the fixes for that problem
-appear in the first query that mentions the problem)
+appear in the first few queries that mention the problem)
 1. master of software engineering
     problems:
-        - took a long time to run because of stop word
+        - took a long time to run because of stop word/long posting lists
         - results returned were not that relevant
     fixes:
         - we disregarded stop words in queries if they were less than 70% of the query
@@ -57,31 +57,38 @@ appear in the first query that mentions the problem)
         - long time to run because of many words in query
     fixes: 
         - made an index of index file that stores the exact position a word appears in the index file
-
-
-
-master of software engineering (added weights removed stop words if less than 50% of the query)
-acm (added weights)
-machine learning (added weights)
-faculty
-cristina lopes (added weights)
-the and then of in an and when where (changed how index of index is constructed)
-the be to of and a in that have i
-bdm
-to be or not to be
-air force
-homework
-draft
-the be to of and a in that have i software engineering
-spring project
-software engineering machine learning artificial intelligence
-computer science
-data science
-alex thornton
-becoming an ics lab tutor
-master of software engineering and where a
-master of software engineering thorntown
-engg enghalskrug energi engestrom
-the be to of and a in that have i thorntown
-a b c d e f g h i j k l m n o p q r s t u v w x y z
-have that and be in of to a i
+10. acm
+    problem:
+        - results were not the best/better results could have been returned
+    fixes:
+        - added weights to important words in build index
+11. the be to of and a in that have i software engineering
+    problem: 
+        - lots of words in the query so have to find/look through many posting lists
+        - contains lots of stop words which have particularly long posting lists
+    fixes:
+        - stop word processing
+        - changed how index is accessed
+        - changed how posting lists are gone through as a whole
+12. the be to of and a in that have i thorntown
+    problem:
+        - did not return any results because there were no documents that contain all these words
+    fixes:
+        - changed how retrieval worked to take into account documents that did contained at least one of the words to be valid for
+        being returned in the top 5 results
+13. engg enghalskrug energi engestrom
+    problem:
+        - long posting lists for each word so retrieval took a long time
+    fixes:
+        - made an index of index file 
+14. to be or not to be
+    problem:
+        - lots of stop words
+    fixes:
+        - stop word processing/ignore duplicates
+15. data science
+16. alex thornton
+17. becoming an ics tutor
+18. air force
+19. computer science
+20. faculty
