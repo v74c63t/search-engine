@@ -12,6 +12,12 @@ def input_query(HTMLq):
     '''
     the function takes a query and make changes/parses it so it can be 
     be used to retrieve documents from the index
+
+    HTMLq: the query string received from the gui
+
+    the function returns a set of the parsed words in the query and
+    the time at which it receive the query so it can later be used
+    to calculate the query response time
     '''
     queries = HTMLq
     # we save the time that we received the query
@@ -60,7 +66,8 @@ def input_query(HTMLq):
 def load_index():
     '''
     this loads the document to url dictionary and the index 
-    word to file position dictionary
+    word to file position dictionary and return them so it can be
+    used during retrieval 
     '''
     with open('doc_url.json', 'r') as file:
         documents = json.load(file) 
@@ -69,12 +76,17 @@ def load_index():
         index_pos = json.load(file)
     return index_pos, documents
 
-# def term_at_time_retr(documents, index_pos, k, query):
 def search(documents, index_pos, k, HTMLq):
     '''
     this is essentially term at a time retrieval
     it gets all the postings for each word from the index file
     and returns the top k results based on their weight score
+
+    documents: the dictionary that maps document ids to document urls
+    index_pos: the dictionary that maps words to their position in the index file
+    k: the top number of urls to be returned
+    HTMLq: the query obtained from the input field of the gui
+
     '''
     query, start = input_query(HTMLq)
     if len(query) == 0:
