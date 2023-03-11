@@ -160,6 +160,7 @@ def sort_and_tfidf(N: int):
     '''
     with open('index.json') as file:
         index = json.load(file)
+        index.pop("")
     for _, v in index.items():
         v_len = len(v)
         for p in v:
@@ -174,6 +175,12 @@ def sort_and_tfidf(N: int):
                 # because of that, this weight is multiplied to the tf-idf score
                 w *= p['f']
             p['y'] = w 
+    to_be_popped = []
+    for k, v in index.items():
+        if v == []:
+            to_be_popped.append(k)
+    for k in to_be_popped:
+        index.pop(k)
     with open('index.json', 'w') as file:
         # this index is then sort alphabetically and each key-val pair is put on a new line
         alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n')
