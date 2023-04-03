@@ -1,4 +1,4 @@
---Vanessa Tang, Liam Breton, Genevieve Del Rosario--
+--Vanessa Tang--
 
 ABOUT
 This is a search engine that uses rank retrieval to retrieve urls that are most relevant to the query based on the index that was built.
