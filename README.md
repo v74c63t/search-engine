@@ -1,15 +1,13 @@
---Vanessa Tang--
-
-ABOUT
+## ABOUT
 This is a search engine that uses rank retrieval to retrieve urls that are most relevant to the query based on the index that was built.
 
-CONFIGURATION
+## CONFIGURATION
 1. Installing libraries
 There are some libraries used that must be installed because they are not a part of the python standard library. Before running anything, they must be installed through the terminal via pip or pip3 so everything can run. Make sure BeautifulSoup, nltk, and flask are installed as well as nltk stopwords being downloaded prior to executing the program.
 2. Documents
 Put the documents you plan on building your index from in a folder inside the directory and name it `DEV` and make sure they are .JSON files.
 
-EXECUTION
+## EXECUTION
 1. Building the Index
 To build the index, open up the terminal and insert `python index.py` and as long as the folder with the documents are set up properly, this would create three files in total: index.json, index_pos.json, and doc_url.json. (Note: this process may take a while to run)
 2. Starting the Search Interface
