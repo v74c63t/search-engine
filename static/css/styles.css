@@ -12,5 +12,11 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    gap:10px;
+    gap:20px;
+}
+
+.list-container {
+    line-height:200%; 
+    font-size:20px; 
+    margin-bottom: 20px;
 }
