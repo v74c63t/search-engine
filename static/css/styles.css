@@ -1,3 +1,26 @@
+body{
+    background-color: darkslategray; 
+    font-family: 'Segoe UI';
+}
+
+.header{
+    display: flex;
+    justify-content: space-between;
+    padding: 15px;
+    padding-left: 25px;
+    padding-right: 25px;
+    background-color: beige;
+}
+
+a{
+    color:black;
+}
+
+a:hover{
+    color:darkblue;
+    text-decoration: none;
+}
+
 .container{
     margin-top: 100px;
     display:flex;
