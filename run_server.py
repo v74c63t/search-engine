@@ -27,4 +27,7 @@ def index():
 		return render_template('base.html')
 
 if __name__ == "__main__":
-	app.run(debug=True)
+	# app.run(debug=True)
+	url = 'http://127.0.0.1:5000'
+	webbrowser.open_new(url)
+	app.run()
