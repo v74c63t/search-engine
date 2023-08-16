@@ -1,23 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZOT Query</title>
-    <style>
+    <!-- <style>
         div.container {
             padding-top: 100px;
             text-align: center;
         }
-    </style>
+    </style> -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"> 
 </head>
 <body style="background-color: darkslategray; font-family: 'Segoe UI'">
-    <a class="btn btn-light btn-outline-secondary" style="margin-left: 10px; margin-top: 10px; color:black" href="/">Home</a>
+    <header><a class="btn btn-light btn-secondary" style="margin-left: 10px; margin-top: 10px; color:black" href="/">Home</a></header>
     <div class=container>
         <h1 style="font-size:150px; color:beige"> <strong><em>ZOT Query</em></strong> </h1>
-        <br>
-        <form action="#" method="post" autocomplete="off">
-            <p> <input type="text" name="input" placeholder="Enter Query Here" /> </p>
-            <p> <input type="submit" value="Search" /> </p>
+        <form action="#" method="post" autocomplete="off" class="form">
+            <input type="text" name="input" placeholder="Enter Query Here" />
+            <button type="submit" class="btn btn-light btn-secondary btn-sm" >Search</button>
         </form>
         <p style="font-size:25px;color:beige"> {{queries}} </p>
         <p style="font-size:20px; line-height:50%;color:beige"> {% if queries %} in <em>{{time}}</em> ms.{% endif %} </p>
