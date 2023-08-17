@@ -5,13 +5,16 @@ This is a search engine that uses rank retrieval to retrieve urls that are most 
 ## CONFIGURATION
 
 1. Installing libraries
-   - There are some libraries used that must be installed because they are not a part of the python standard library. Before running anything, they must be installed through the terminal via pip or pip3 so everything can run. Make sure BeautifulSoup, nltk, and flask are installed as well as nltk stopwords being downloaded prior to executing the program.
+   - There are some libraries used that must be installed because they are not a part of the python standard library. Before running anything, they must be installed through the terminal via pip or pip3 so everything can run. Make sure the below dependencies are installed as well as nltk stopwords being downloaded prior to executing the program.
    <br>
    
    ```
    pip3 install nltk
    pip3 install bs4
    pip3 install flask
+   pip3 install lxml
+   pip3 install unidecode
+   pip3 install simhash
    ```
 2. Documents
    - Put the documents you plan on building your index from in a folder inside the directory and name it `DEV` and make sure they are .JSON files.
