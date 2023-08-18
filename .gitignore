@@ -360,3 +360,9 @@ index.json
 index_pos.json
 
 doc_url.json
+
+/indexes
+doc_url_analyst.json
+index_copy.py
+test.json
+test2.json
