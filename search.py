@@ -1,5 +1,6 @@
 
 import nltk
+nltk.download('stopwords')
 import json
 from queue import PriorityQueue
 import time
