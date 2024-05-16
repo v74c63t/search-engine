@@ -5,19 +5,29 @@ body{
 
 .header{
     display: flex;
-    justify-content: space-between;
-    padding: 15px;
+    font-family: 'Segoe UI';
+    /* padding: 15px;
     padding-left: 25px;
-    padding-right: 25px;
-    background-color: beige;
+    padding-right: 25px; */
+    padding: 0.6rem 0.8rem;
+    background-color: #222220;
+    color: beige;
+    font-size: 1.5rem;
+    gap: 1rem;
+}
+
+.header-title {
+    font-size: 1.8rem;
+    font-weight: 800;
+    font-style: italic;
 }
 
 a{
-    color:black;
+    color: beige;
 }
 
 a:hover{
-    color:darkblue;
+    color: #017b7e;
     text-decoration: none;
 }
 

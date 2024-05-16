@@ -4,12 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZOT Query</title>
-    <!-- <style>
-        div.container {
-            padding-top: 100px;
-            text-align: center;
-        }
-    </style> -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}"> 
     <!-- <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='favicon/favicon-32x32.png') }}">
@@ -19,8 +13,8 @@
 </head>
 <body>
     <header class="header">
+        <h2 class="header-title">ZOT Query</h2>
         <a href="/">Home</a>
-        <a href="{{ url_for('about') }}">About</a>
     </header>
     <div class=container>
         <h1 style="font-size:150px; color:beige"> <strong><em>ZOT Query</em></strong> </h1>
@@ -33,7 +27,6 @@
             <p style="font-size:20px; line-height:50%;color:beige"> {% if queries %} in <em>{{time}}</em> ms.{% endif %} </p>
         </div>
     </div>
-    <br>
     <div class="list-container">
         {% for i in range(urllist|length) %}
         <li class="list-group-item list-group-item-light" style="margin-left: 40px; margin-right: 40px;">
