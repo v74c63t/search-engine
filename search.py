@@ -68,12 +68,12 @@ def load_index():
     word to file position dictionary and return them so it can be
     used during retrieval 
     '''
-    with open('doc_url.json', 'r') as file:
+    with open('doc_url_dev.json', 'r') as file:
         documents = json.load(file) 
-    N = len(documents.keys()) 
-    with open('index_pos.json') as file:
+    # N = len(documents.keys()) 
+    with open('indexes/index_of_index.json') as file:
         index_pos = json.load(file)
-    return index_pos, documents
+    return index_pos, documents 
 
 def search(documents, index_pos, k, HTMLq):
     '''
@@ -98,7 +98,7 @@ def search(documents, index_pos, k, HTMLq):
     posting_lists = []
     rank = PriorityQueue()
     try:
-        with open('index.json') as file:
+        with open('indexes/final_index.json') as file:
             for q in query:
                 try:
                     # we try to find the position that the word 

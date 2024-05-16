@@ -7,7 +7,8 @@ app.config['TEMPLATES_AUTO_RELOAD'] = True
 app.jinja_env.auto_reload = True
 
 # we load in both the index position file and the document url file beforehand so it can be used during retrieval
-index_pos, documents = search.load_index()
+
+index_of_index, documents = search.load_index()
 
 #the web gui only has one page, and it automatically creates a numbered list upon the urllist var being filled.
 @app.route("/", methods=['POST', 'GET'])
@@ -16,7 +17,7 @@ def index():
 		nquery = request.form["input"]
 		# if a user inputs some query (as long as it is not "") search would be run for that query
 		if nquery :
-			urllist, time = search.search(documents, index_pos, 5, nquery)
+			urllist, time = search.search(documents, index_of_index, 5, nquery)
 			# the top 5 results and the query response time will be rendered into the page once everything is complete 
 			# by passing its values into variables that will be bound to the html page and displayed  
 			return render_template('base.html', queries = f"Displaying Top {len(urllist)} Results for: \"" + nquery+ "\"", urllist = urllist, time = time)

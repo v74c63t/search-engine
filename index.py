@@ -8,6 +8,8 @@ from pathlib import Path
 import math
 import unicodedata
 from urllib.parse import urldefrag
+import ast
+import time
 
 def build_index(documents):
     '''
@@ -22,13 +24,15 @@ def build_index(documents):
     documents: a list of document paths obtained from get_doc_paths()
     '''
     # index is a defaultdict with keys of strings and values of Posting lists 
+    start = time.time()
+    partial = 1 # this is the partial index file number
     index = defaultdict(list)
     id = 0
     # we will read and parse the documents in batches of 1000 until there are no documents left
     batch_size = 1000
     urls = dict()
     while len(documents) != 0:
-        print(len(documents))
+        print(f'{len(documents)} documents left to read and parse')
         batch = documents[0:batch_size]
         documents = documents[batch_size:]
         for b in batch:
@@ -105,39 +109,190 @@ def build_index(documents):
                         except(IndexError): continue
 
         # we save to disk using json dump and json load
-        file_path = Path('./index.json')
-        # if an index.json file does not already exist, there is no partial index we need to load and merge with the current
-        # index so we simply just create an index.json file to dump the index     
-        if not Path.is_file(file_path):
-            with open('index.json', 'w') as file:
-                json.dump(index, file, cls=PostingEncoder)
-        # if an index.json file does exist, we have to load the partial index from the file and merge it with the current index
-        # before overwriting the file and dumping it back into the file     
-        else:
-            with open('index.json') as file:
-                data = json.load(file)
-            # we merge the index by adding the values together if the keys are the same
-            # if the key does not already exist in the index, a new key-value pair would be created   
-            for k, v in index.items():
-                try:
-                    data[k] += v
-                except(KeyError):
-                    data[k] = v
-            # we then dump the index back into the index file while also using a JSONEncoder so
-            # the posting class can be properly dumped into the file   
-            with open('index.json', 'w') as file:
-                json.dump(data, file, cls=PostingEncoder)
+        print()
+        print(f'Saving current batch to partial index {partial}')
+        file_path = Path(f'./indexes/partial_index{partial}.txt')
+        if not Path.is_dir(Path('./indexes')):
+            os.mkdir('indexes')
+        file = open(file_path, "w")
+        # this is to prevent empty keys
+        try:
+            index.pop("")
+        except(KeyError):
+            pass
+        # this is to prevent empty values
+        to_be_popped = []
+        for k, v in index.items():
+            if v == []:
+                to_be_popped.append(k)
+        for k in to_be_popped:
+            index.pop(k)
+        alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n')
+        file.write(alphabetical)
+        file.close()
+        print(f'{file_path} was created')
+        print()
+        partial += 1
         # we empty out the index before continuing onto the next batch of documents
         index.clear()
-    with open('doc_url.json', 'w') as file:
+    # with open('doc_url_analyst.json', 'w') as file:
+    #     json.dump(urls, file)
+
+    # we save the doc id to document dictionary to a file
+    print('Saving id to document pairs')
+    print()
+    with open('doc_url_dev.json', 'w') as file:
         json.dump(urls, file)
-    # we reformat and sort the index in alphabetical order and update each tf-idf score 
-    sort_and_tfidf(len(urls.keys()))
+    
+    num_urls = len(urls.keys())
+    print(f'{num_urls} documents read and parsed')
     urls.clear()
-    # we then calculate the position of each word in the index file and essentially create 
-    # an index of the index 
-    index_pos()
+    
+    # now all the partial indexes will be merged into one big index
+    print('Merging all partial indexes')
+    merge_partial_indexes('indexes')
+
+    # once everything is merged, a weighted tf-idf score will be calculated for each term
+    print('Calculating weighted tf-idf scores')
+    calc_tfidf(num_urls)
+    print()
+
+    # we then calculate the position of each word in the index file and essentially create an index of the index 
+    # index_pos()
+    print('Creating index of index')
+    index_of_index()
+    print()
+    end = time.time() - start
+    print(f'Index was successfully built in {end / 60} minutes')
     return
+
+def merge_partial_indexes(path):
+    indexes = []
+    for root, _, files in os.walk(Path(path)):
+        for name in files:
+            if 'partial_index' in name:
+                indexes.append(root+'/'+name)
+    # all the partial index file names are collected for merging
+    print('Partial indexes: ', indexes)
+    print()
+    i = 1
+
+    while len(indexes) > 1:
+        file1 = open(Path(indexes[0]), "r")
+        file2 = open(Path(indexes[1]), "r")
+        print(f'Merging {indexes[0]} and {indexes[1]}')
+        merged_path = merge_two_indexes(file1, file2, i)
+        print(f'Finished merging into {merged_path}')
+        print(f'Deleting {indexes[0]} and {indexes[1]}')
+        print()
+        # the merged index is added back to the list of indexes needed to be checked/merged
+        indexes.append(merged_path)
+        # the checked indexes will now be deleted
+        os.remove(indexes[0])
+        indexes.pop(0)
+        os.remove(indexes[0])
+        indexes.pop(0)
+        i+=1
+    os.rename(indexes[0], 'indexes/merged_index.json')
+
+def merge_two_indexes(file1, file2, i):
+    merge_path = f"indexes/temp_merge{i}.txt"
+    temp_merge_file = open(Path(merge_path), "w")
+    line1 = file1.readline()
+    line2 = file2.readline()
+    first = True
+    prev_line = ""
+    while line1 != "" and line2 != "":
+        temp_dict = dict()
+        new_line = ""
+        if line1.startswith("{"):
+            key1 = line1[2:line1.find('": ')]
+            line1 = line1[1:]
+        else:
+            key1= line1[1:line1.find('": ')]
+        if line2.startswith("{"):
+            key2 = line2[2:line2.find('": ')]
+            line2 = line2[1:]
+        else:
+            key2= line2[1:line2.find('": ')]
+        if line1.endswith("], \n"):
+            val1 = ast.literal_eval(line1[line1.find('": ')+3:-3])
+        else:
+            val1 = ast.literal_eval(line1[line1.find('": ')+3:-1])
+        if line2.endswith("], \n"):
+            val2 = ast.literal_eval(line2[line2.find('": ')+3:-3])
+        else:
+            val2 = ast.literal_eval(line2[line2.find('": ')+3:-1])
+        if key1 == key2:
+            temp_dict[key1] = val1 + val2
+            if first:
+               new_line = json.dumps(temp_dict, cls=PostingEncoder)[:-1] + ', \n' 
+               first = False
+            else:
+                new_line = json.dumps(temp_dict, cls=PostingEncoder)[1:-1] + ', \n'
+            line1 = file1.readline()
+            line2 = file2.readline()
+        elif key1 < key2:
+            new_line = line1
+            if new_line.endswith('}'):
+                new_line = new_line.replace(']}', '], \n')
+            if first:
+                new_line = '{' + new_line
+                first = False
+            line1 = file1.readline()
+        elif key2 < key1:
+            new_line = line2
+            if new_line.endswith('}'):
+                new_line = new_line.replace(']}', '], \n')
+            if first:
+                new_line = '{' + new_line
+                first = False
+            line2 = file2.readline()
+        if new_line.endswith('}'):
+            new_line = new_line.replace(']}', '], \n')
+        if prev_line != "" and new_line != "":
+            temp_merge_file.write(prev_line)
+        if new_line != "":
+            prev_line = new_line
+
+    while line1 != "":
+        new_line = ""
+        if line1.startswith("{") and first:
+            new_line = line1
+            first = False
+        elif line1.startswith("{"):
+            new_line = line1[1:]
+        else:
+           new_line = line1
+        if prev_line != "":
+            temp_merge_file.write(prev_line)
+        if new_line.endswith('}'):
+            new_line = new_line.replace(']}', '], \n')
+        prev_line = new_line
+        line1=file1.readline()
+    
+    while line2 != "":
+        new_line = ""
+        if line2.startswith("{") and first:
+            new_line = line2
+            first = False
+        elif line2.startswith("{"):
+            new_line = line2[1:]
+        else:
+           new_line = line2
+        if prev_line != "":
+            temp_merge_file.write(prev_line)
+        if new_line.endswith('}'):
+            new_line = new_line.replace(']}', '], \n')
+        prev_line = new_line
+        line2=file2.readline()
+
+    temp_merge_file.write(prev_line.replace('], \n', ']}'))
+    file1.close()
+    file2.close()
+    temp_merge_file.close()
+    return merge_path
+
 
 def get_doc_paths(path):
     '''
@@ -155,48 +310,57 @@ def get_doc_paths(path):
                 documents.append(root+'/'+name)
     return documents
 
-def sort_and_tfidf(N):
-    '''
-    this sorts the index alphabetically and calculates the tf-idf score
-    for each term-document pair (extra weights are given to important words)
-    it then writes it back to the index file and put each term-list of postings pair 
-    onto a newline so it can be retrieved easily later
-
-    N: the total number of documents
-    '''
-    with open('index.json') as file:
-        index = json.load(file)
-        # this is to prevent empty keys
-        try:index.pop("")
-        except(KeyError): pass
-    for _, v in index.items():
-        v_len = len(v)
-        for p in v:
-            # we go through each posting and update 'y' to be the 
+def calc_tfidf(N):
+    # we go line by line to calculated the weighted tf-idf score for each term 
+    # and save that information into the final index file
+    merged_index = open('indexes/merged_index.json', 'r')
+    final_index = open('indexes/final_index.json', 'w')
+    line = merged_index.readline()
+    first = True
+    while line != "":
+        last = True
+        temp_line = line
+        if not temp_line.startswith('{'):
+            temp_line = '{' + temp_line
+        if not temp_line.endswith(']}'):
+            last = False
+            temp_line = temp_line.replace('], \n', ']}')
+        line_dict = json.loads(temp_line)
+        key = list(line_dict.keys())[0]
+        if key == '':
+            line = merged_index.readline()
+            continue
+        postings = line_dict[key]
+        if postings == []:
+            line = merged_index.readline()
+            continue
+        num_postings = len(postings)
+        for posting in postings:
+           # we go through each posting and update 'y' to be the 
             # tf-idf value for that document 
-            tf = 1 + math.log(p["y"], 10)
-            idf = math.log((N/v_len), 10)
+            tf = 1 + math.log(posting["y"], 10)
+            idf = math.log((N/num_postings), 10)
             w = tf * idf
-            if p["f"] != 0:
+            if posting["f"] != 0:
                 # if the 'f' field is not equal to 0, this word is considered important
                 # and has a weight associated with it for appearing in certain tags
                 # because of that, this weight is multiplied to the tf-idf score
-                w *= p['f']
-            p['y'] = w 
-    # this is to prevent empty values
-    to_be_popped = []
-    for k, v in index.items():
-        if v == []:
-            to_be_popped.append(k)
-    for k in to_be_popped:
-        index.pop(k)
-    with open('index.json', 'w') as file:
-        # the index is then sort alphabetically and each key-val pair is put on a new line
-        alphabetical = json.dumps(index, cls=PostingEncoder, sort_keys=True).replace('], ', '], \n')
-        index.clear()
-        file.write(alphabetical)
+                w *= posting['f']
+            posting['y'] = w 
+        write = json.dumps(line_dict)[1:]
+        if first:
+            write = '{' + write
+            first = False
+        if last:
+            final_index.write(write)
+        else:
+            final_index.write(write.replace(']}', '], \n'))
+        line = merged_index.readline()
+    merged_index.close()
+    os.remove('indexes/merged_index.json')
+    final_index.close()
 
-def index_pos():
+def index_of_index():
     '''
     essentially creates an index of the index file that
     stores the exact position a word is in the index file
@@ -204,7 +368,7 @@ def index_pos():
     '''
     pos = 0
     index_pos = dict()
-    with open('index.json') as file:
+    with open('indexes/final_index.json') as file:
         # we read the index file until there are no more lines 
         # left in order to store with each word the exact position
         # it appears in in the index file
@@ -222,7 +386,7 @@ def index_pos():
             index_pos[word] = pos
             pos += len(line)
             line = file.readline()
-    with open('index_pos.json', 'w') as file:
+    with open('indexes/index_of_index.json', 'w') as file:
         json.dump(index_pos, file)
 
 
