@@ -1,10 +1,10 @@
 # ZOT Query 
 
-## ABOUT
+## About
 
 This is a search engine that uses rank retrieval to retrieve urls that are most relevant to the query based on the index that was built.
 
-## CONFIGURATION
+## Configuration
 
 1. Installing libraries
    - There are some required libraries that must be installed that are not part of the standard Python libraries. These must be installed prior to running anything and can be done by running the command below.
@@ -18,7 +18,7 @@ This is a search engine that uses rank retrieval to retrieve urls that are most 
    - All the documents within in this folder should be JSON files
 
 
-## EXECUTION
+## Execution
 
 1. **Building the Index**
    - To build the index run the command below
@@ -63,6 +63,6 @@ This is a search engine that uses rank retrieval to retrieve urls that are most 
     - If an error pops up, such as accessed denied, you may need to wait a bit for everything to successfully render/load and it should work in a few minutes
     - Make sure the url has `http://` instead of `https://`
 
-## VIDEO WALKTHROUGH
+## Video Walkthrough
 
 <img src='assets/walkthrough.gif' alt='walkthrough'/>
