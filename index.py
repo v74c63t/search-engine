@@ -11,7 +11,7 @@ from urllib.parse import urldefrag
 import ast
 import time
 
-def build_index(documents):
+def build_index(documents: list):
     '''
     takes in a list of documents and builds an index based on
     the words found in these documents
@@ -166,8 +166,14 @@ def build_index(documents):
     print(f'Index was successfully built in {end / 60} minutes')
     return
 
-def merge_partial_indexes(path):
+def merge_partial_indexes(path: str):
+    '''
+    path: string of the path to where the partial indexes are stored
+
+    merges all the partial indexes into one big index and stores it into indexes/merged_index.json
+    '''
     indexes = []
+    # only takes in files that includes the substring partial_index to avoid files such as .DS_Store
     for root, _, files in os.walk(Path(path)):
         for name in files:
             if 'partial_index' in name:
@@ -177,6 +183,9 @@ def merge_partial_indexes(path):
     print()
     i = 1
 
+    # goes through all the partial indexes for merging
+    # it will loop as long as there are more than one partial index in the queue to be merged
+    # once there is only one index left, it will exit the loop and the file will be renamed
     while len(indexes) > 1:
         file1 = open(Path(indexes[0]), "r")
         file2 = open(Path(indexes[1]), "r")
@@ -187,7 +196,7 @@ def merge_partial_indexes(path):
         print()
         # the merged index is added back to the list of indexes needed to be checked/merged
         indexes.append(merged_path)
-        # the checked indexes will now be deleted
+        # both of the checked indexes will now be deleted
         os.remove(indexes[0])
         indexes.pop(0)
         os.remove(indexes[0])
@@ -195,16 +204,30 @@ def merge_partial_indexes(path):
         i+=1
     os.rename(indexes[0], 'indexes/merged_index.json')
 
-def merge_two_indexes(file1, file2, i):
+def merge_two_indexes(file1: Path, file2: Path, i: int) -> str:
+    '''
+    file1, file2: opened files that need to be merged
+    i: int that is used to name the temporary merge file
+
+    takes in two open files and merges them into a single file 
+    returns the string of the path to the merged file
+    '''
+    # a temporary merge file will be created to store information from both files
+    # this file will be renamed if it ends up being the final index
     merge_path = f"indexes/temp_merge{i}.txt"
     temp_merge_file = open(Path(merge_path), "w")
     line1 = file1.readline()
     line2 = file2.readline()
-    first = True
-    prev_line = ""
+    first = True # this is to determine if we are writing to the first line of the file to ensure the format is appropriate
+    prev_line = "" 
+    # a line is only written to the file after the next line is read in order to figure out which is the last line to be
+    # written and to ensure the format is correct
     while line1 != "" and line2 != "":
+        # a line for both files are read and compared
+        # a temporary dictionary is created to store the information
         temp_dict = dict()
         new_line = ""
+        # the key and value must first be parsed out from both lines for comparison and merging
         if line1.startswith("{"):
             key1 = line1[2:line1.find('": ')]
             line1 = line1[1:]
@@ -223,6 +246,10 @@ def merge_two_indexes(file1, file2, i):
             val2 = ast.literal_eval(line2[line2.find('": ')+3:-3])
         else:
             val2 = ast.literal_eval(line2[line2.find('": ')+3:-1])
+
+        # if the key from both lines are the same, their values will be combined together using the temporary dictionary
+        # this dictionary will then be json dumps into a string with the correct format
+        # if this is not the first line of the file, { would be removed from the string
         if key1 == key2:
             temp_dict[key1] = val1 + val2
             if first:
@@ -232,6 +259,10 @@ def merge_two_indexes(file1, file2, i):
                 new_line = json.dumps(temp_dict, cls=PostingEncoder)[1:-1] + ', \n'
             line1 = file1.readline()
             line2 = file2.readline()
+        # if the key from line1 is less than the one from line2
+        # the information from line1 will be in queue to be put in the file first
+        # and another line will be read from file1 to be compared to line2
+        # if this is not the first line of the file, { would be removed from the string if it contains it
         elif key1 < key2:
             new_line = line1
             if new_line.endswith('}'):
@@ -240,6 +271,10 @@ def merge_two_indexes(file1, file2, i):
                 new_line = '{' + new_line
                 first = False
             line1 = file1.readline()
+        # if the key from line2 is less than the one from line1
+        # the information from line2 will be in queue to be put in the file first
+        # and another line will be read from file2 to be compared to line1
+        # if this is not the first line of the file, { would be removed from the string if it contains it
         elif key2 < key1:
             new_line = line2
             if new_line.endswith('}'):
@@ -248,13 +283,18 @@ def merge_two_indexes(file1, file2, i):
                 new_line = '{' + new_line
                 first = False
             line2 = file2.readline()
+        # if the line contains }, it will be replaced with the correct format
         if new_line.endswith('}'):
             new_line = new_line.replace(']}', '], \n')
+        # as long as new line contains something, prev line will be written to the file as it is
         if prev_line != "" and new_line != "":
             temp_merge_file.write(prev_line)
+        # once prev line is written to the file, new line will now replace prev line
         if new_line != "":
             prev_line = new_line
 
+    # now that all lines have been read from one file, we need to check if there are any remaining lines not read from a file
+    # the process for reading in lines and checking the formatting is the same as above
     while line1 != "":
         new_line = ""
         if line1.startswith("{") and first:
@@ -287,21 +327,24 @@ def merge_two_indexes(file1, file2, i):
         prev_line = new_line
         line2=file2.readline()
 
+    # since all lines have been read from both files, we now know the current line in prev line is the final line of the file
+    # in that case, we can add a } to it to make sure everything in the file is now formatted properly
     temp_merge_file.write(prev_line.replace('], \n', ']}'))
     file1.close()
     file2.close()
     temp_merge_file.close()
+    # the merged file path is returned as a string
     return merge_path
 
 
-def get_doc_paths(path):
+def get_doc_paths(path:str) -> list[str]:
     '''
     get all the documents paths in a folder and puts it
     into a list so it can be accessed later during the 
     building of the index
 
-    path: the path to the folder containing all the documents
-    documents: a list of all the document paths
+    path: the string of the path to the folder containing all the documents
+    returns a list of all the document paths
     '''
     documents = []
     for root, _, files in os.walk(Path(path)):
@@ -310,7 +353,13 @@ def get_doc_paths(path):
                 documents.append(root+'/'+name)
     return documents
 
-def calc_tfidf(N):
+def calc_tfidf(N: int):
+    '''
+    N: the number of documents in total
+
+    calculates the weighted tf-idf scores for every term within the merged index
+    and creates the final index containing all the terms for N documents and their updated scores
+    '''
     # we go line by line to calculated the weighted tf-idf score for each term 
     # and save that information into the final index file
     merged_index = open('indexes/merged_index.json', 'r')
@@ -320,6 +369,9 @@ def calc_tfidf(N):
     while line != "":
         last = True
         temp_line = line
+        # the if statements below are to fix the formatting of the line
+        # to ensure it can be loaded using json loads so the calculation
+        # and updates can be done more smoothly 
         if not temp_line.startswith('{'):
             temp_line = '{' + temp_line
         if not temp_line.endswith(']}'):
@@ -327,6 +379,7 @@ def calc_tfidf(N):
             temp_line = temp_line.replace('], \n', ']}')
         line_dict = json.loads(temp_line)
         key = list(line_dict.keys())[0]
+        # lines with empty keys or values will be ignored
         if key == '':
             line = merged_index.readline()
             continue
@@ -348,6 +401,7 @@ def calc_tfidf(N):
                 w *= posting['f']
             posting['y'] = w 
         write = json.dumps(line_dict)[1:]
+        # this is to return the formatting back to how it was originally when read in from the file
         if first:
             write = '{' + write
             first = False
@@ -357,6 +411,7 @@ def calc_tfidf(N):
             final_index.write(write.replace(']}', '], \n'))
         line = merged_index.readline()
     merged_index.close()
+    # the original merged index without the updated scores will now be deleted
     os.remove('indexes/merged_index.json')
     final_index.close()
 
@@ -396,7 +451,7 @@ class Posting():
     # self.y is the score of the document
     # self.f is used to keep track of the weight of the document 
     # if the word appeared to be important 
-    def __init__(self, doc_id):
+    def __init__(self, doc_id: int):
         self.id = doc_id
         self.y = 1 
         self.f = 0 
@@ -405,7 +460,7 @@ class Posting():
         self.y+=1
     def get_doc_id(self): 
         return self.id
-    def importance(self, field):
+    def importance(self, field: str):
         # importance: title > h1 > h2 = h3 = strong = b
         # depending on the tag the word is found in, it will have
         # a different multiplier that will change its tf-idf score

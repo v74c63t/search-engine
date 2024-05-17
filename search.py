@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 import unicodedata
 from collections import defaultdict
 
-def input_query(HTMLq):
+def input_query(HTMLq: str) -> tuple[set, float]:
     '''
     the function takes a query and make changes/parses it so it can be 
     be used to retrieve documents from the index
@@ -63,7 +63,7 @@ def input_query(HTMLq):
     else:
         return non_parsed, start
 
-def load_index():
+def load_index() -> tuple[dict, dict]:
     '''
     this loads the document to url dictionary and the index 
     word to file position dictionary and return them so it can be
@@ -73,10 +73,10 @@ def load_index():
         documents = json.load(file) 
     # N = len(documents.keys()) 
     with open('indexes/index_of_index.json') as file:
-        index_pos = json.load(file)
-    return index_pos, documents 
+        index_of_index = json.load(file)
+    return index_of_index, documents 
 
-def search(documents, index_pos, k, HTMLq):
+def search(documents: dict, index_of_index: dict, k: int, HTMLq: str) -> tuple[list, float]:
     '''
     this is essentially term at a time retrieval
     it gets all the postings for each word from the index file
@@ -84,10 +84,11 @@ def search(documents, index_pos, k, HTMLq):
     and the time it took for the query response
 
     documents: the dictionary that maps document ids to document urls
-    index_pos: the dictionary that maps words to their position in the index file
+    index_of_index: the dictionary that maps words to their position in the index file
     k: the top number of urls to be returned
     HTMLq: the query obtained from the input field of the gui
 
+    returns
     results: list top k of urls
     ntime: the time the query response took
     '''
@@ -105,7 +106,7 @@ def search(documents, index_pos, k, HTMLq):
                     # we try to find the position that the word 
                     # is in in the index file and use seek() and
                     # readline() to get the posting list  
-                    pos = index_pos[q]
+                    pos = index_of_index[q]
                     file.seek(pos)
                     index = file.readline()
                     # we have to make sure the format is correct so
